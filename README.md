@@ -12,6 +12,18 @@ Chrome tests. New audit POST/completion are acknowledged; independent audit
 readback remains blocked, and submission readiness remains NO.** See the
 [Phase 2.4 report](docs/phase24-application-e2e-report.md) for final measured gates.
 
+Phase 2.4 source is published at [0058242c4fda4b30065cd19225566d6e814bf074](https://github.com/miku-wwl/aig-flow-state/commit/0058242c4fda4b30065cd19225566d6e814bf074); local and GitHub main were
+verified on 12 October 2026. Phase 2.5 final delivery prepares a local narrated
+three-minute MP4, captions and sanitized evidence in ignored
+`.artifacts/final-submission/`. These assets have no public URL yet. This
+documentation update records the completed local delivery. Historical reports retain
+their original qualification-time statements.
+
+The shared Core is a pre-existing project dependency maintained by the same
+operator. It is reused through its pinned public API; Core development is not
+claimed as work completed during this hackathon. The incident product/UI, Ollama
+provider and ArmorIQ consumer integrations are the competition-specific work.
+
 Phase 1 is a local, single-operator application for one workflow: creating a synthetic
 incident handoff. A real Ollama model proposes a bounded Plan. You review the persisted
 Plan, approve or reject it, admit an Action, authorize it independently, and execute it.
