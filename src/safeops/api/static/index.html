@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SafeOps Agent · Incident handoff</title>
+  <link rel="stylesheet" href="/static/styles.css"><script defer src="/static/app.js"></script>
+</head>
+<body>
+<header><a class="brand" href="/">S<span>SafeOps Agent</span></a><span class="chip">LOCAL / PHASE 1</span></header>
+<main>
+  <section class="hero"><div><p class="eyebrow">PERMISSIONED INCIDENT HANDOFF ASSISTANT</p>
+    <h1>A clear handoff.<br>A deliberate action.</h1>
+    <p>Turn incident context into a reviewed plan. You control every step before a handoff is written.</p></div>
+    <aside class="mode-card"><span class="dot"></span><strong id="provider-mode">Connecting…</strong>
+      <p>Simulated policy enforcement — Phase 1 offline mode</p><small>Local single-operator demo · Synthetic incidents only</small></aside>
+  </section>
+  <section class="access card"><div><strong>Operator capability</strong><p id="capability-status">Load your private capability file to open this workspace. It stays in browser memory.</p></div>
+    <label class="file-button">Load capability<input id="capability-file" type="file" aria-label="Load private capability file"></label>
+    <button id="lock" class="quiet">Lock workspace</button>
+  </section>
+  <div id="error" role="alert" hidden></div><div id="notice" role="status" hidden></div>
+  <div class="workspace">
+    <section class="card request"><div class="section-title"><span class="number">01</span><div><h2>Describe the incident</h2><p>One handoff, one bounded business action.</p></div></div>
+      <label for="intent">Incident context</label><textarea id="intent" maxlength="4096" rows="7">Create an incident handoff for INC-1042. The checkout API is returning errors. The team should investigate the upstream dependency and preserve investigation notes.</textarea>
+      <button id="generate" class="primary">Generate Plan &amp; save Run</button><small class="hint">No approval or execution happens here.</small>
+      <hr><label for="restore-id">Open a saved Run</label><div class="inline"><input id="restore-id" placeholder="Run UUID" autocomplete="off"><button id="restore" class="quiet">Open</button></div>
+    </section>
+    <section class="card review"><div class="section-title"><span class="number">02</span><div><h2>Review the exact Plan</h2><p>Approval belongs to this persisted Plan and version.</p></div></div>
+      <div class="state-line"><span id="run-state" class="badge">No Run selected</span><span id="run-version"></span></div>
+      <p id="validation">Generate a Plan to see validation and risk.</p><dl id="plan-fields"></dl>
+      <details><summary>Full structured Plan</summary><pre id="plan-json">No Plan yet.</pre></details>
+      <p id="run-id" class="identifier"></p><div class="buttons"><button id="approve" class="primary" disabled>Approve exact Plan</button><button id="reject" class="danger" disabled>Reject Plan</button></div>
+    </section>
+  </div>
+  <section class="card execution"><div class="section-title"><span class="number">03</span><div><h2>Authorize, then execute</h2><p>Human approval and trusted execution authorization are separate gates.</p></div></div>
+    <div class="buttons"><button id="admit" class="quiet" disabled>Admit approved Action</button><button id="authorize" class="quiet" disabled>Authorize Action</button><button id="execute" class="primary" disabled>Execute once</button><button id="try-unauthorized" class="danger" disabled>Test execution without authorization</button><button id="replay" class="quiet" disabled>Replay exact request</button></div>
+    <div class="result-grid"><div><p class="eyebrow">BACKEND ACTION STATE</p><strong id="action-state">No Action admitted</strong><p id="action-id" class="identifier"></p></div><div><p class="eyebrow">DURABLE RECEIPT</p><strong id="receipt">—</strong><p id="action-message">Awaiting your review.</p></div></div>
+    <details><summary>Backend Action snapshot</summary><pre id="action-json">No Action yet.</pre></details>
+  </section>
+  <div class="workspace bottom">
+    <section class="card records"><div class="section-title"><span class="number">04</span><div><h2>Persisted handoffs</h2><p>Read from the separate business SQLite store.</p></div></div><button id="refresh-records" class="quiet">Refresh records</button><div id="records"><p class="empty">Load capability to view records.</p></div></section>
+    <section class="card policy"><p class="eyebrow">MOCK POLICY LAB</p><h2>See a safe denial</h2><p>Request <code>purge_incident_history</code> against a deterministic local deny policy.</p><p>No destructive executor exists. This policy test creates no core Action.</p><button id="policy-test" class="danger">Test simulated forbidden operation</button><pre id="policy-result">No policy test yet.</pre></section>
+  </div>
+  <footer>Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · No production systems or live ArmorIQ calls</footer>
+</main>
+</body></html>

@@ -1,0 +1,10 @@
+.venv/
+.runtime/
+.artifacts/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.env
+*.sqlite3*
+*.owner
