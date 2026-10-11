@@ -15,6 +15,7 @@ class Settings:
     fixture_fault: str = "none"
     executor_fault: str = "none"
     predecessor_stopped: bool = False
+    enforcement_mode: str = "mock"
 
     def __post_init__(self):
         url = urlsplit(self.ollama_url)
@@ -30,6 +31,10 @@ class Settings:
             raise ValueError("Ollama must use a local HTTP endpoint")
         if self.provider not in {"ollama", "fixture"}:
             raise ValueError("Choose ollama or fixture explicitly")
+        if self.enforcement_mode not in {"mock", "real"}:
+            raise ValueError("Choose mock or real enforcement explicitly")
+        if self.enforcement_mode == "real" and self.executor_fault != "none":
+            raise ValueError("Real enforcement does not accept mock execution faults")
         if not math.isfinite(self.model_timeout) or not 0 < self.model_timeout <= 28:
             raise ValueError("Model timeout must be in (0, 28], within the core HTTP budget")
         if self.fixture_fault not in {"none", "timeout", "invalid_json", "unavailable"}:
@@ -50,4 +55,5 @@ class Settings:
             model=os.getenv("SAFEOPS_MODEL") or None,
             model_timeout=float(os.getenv("SAFEOPS_MODEL_TIMEOUT", "28")),
             predecessor_stopped=predecessor_stopped,
+            enforcement_mode=os.getenv("SAFEOPS_ENFORCEMENT_MODE", "mock"),
         )

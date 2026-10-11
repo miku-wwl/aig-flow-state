@@ -3,6 +3,9 @@
 A permissioned AI agent for secure incident handoffs. **Trust the intent. Govern the action.**
 This is Phase 1 Local E2E for Flow State — AI Agent & MCP Hackathon, organized by
 ArmorIQ. Policy enforcement is simulated; real ArmorIQ SDK integration belongs to Phase 2.
+This document preserves the Phase 1 design. The implemented Phase 2 path and current
+qualification limits are documented in [Phase 2 architecture](phase2-architecture.md)
+and [the execution report](phase2-e2e-report.md).
 
 ```mermaid
 flowchart TD

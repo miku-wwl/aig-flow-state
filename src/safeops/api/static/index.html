@@ -7,14 +7,14 @@
   <link rel="stylesheet" href="/static/styles.css"><script defer src="/static/app.js"></script>
 </head>
 <body>
-<header><a class="brand" href="/" aria-label="Aegis Relay home">A<span>Aegis Relay</span></a><span class="chip">LOCAL / PHASE 1</span></header>
+<header><a class="brand" href="/" aria-label="Aegis Relay home">A<span>Aegis Relay</span></a><span id="mode-chip" class="chip">LOCAL / MOCK</span></header>
 <main>
   <section class="hero"><div><p class="eyebrow">Trust the intent. Govern the action.</p>
     <h1>Aegis Relay</h1>
     <p>A permissioned AI agent for secure incident handoffs.</p>
     <p>Turn incident context into a reviewed plan. You control every step before a handoff is written.</p></div>
     <aside class="mode-card"><span class="dot"></span><strong id="provider-mode">Connecting…</strong>
-      <p>Simulated policy enforcement — Phase 1 offline mode</p><small>Local single-operator demo · Synthetic incidents only</small></aside>
+      <p id="enforcement-mode">Simulated policy enforcement — Phase 1 offline mode</p><small id="integration-status">Local single-operator demo · Synthetic incidents only</small></aside>
   </section>
   <section class="access card"><div><strong>Operator capability</strong><p id="capability-status">Load your private capability file to open this workspace. It stays in browser memory.</p></div>
     <label class="file-button">Load capability<input id="capability-file" type="file" aria-label="Load private capability file"></label>
@@ -41,8 +41,8 @@
   </section>
   <div class="workspace bottom">
     <section class="card records"><div class="section-title"><span class="number">04</span><div><h2>Persisted handoffs</h2><p>Read from the separate business SQLite store.</p></div></div><button id="refresh-records" class="quiet">Refresh records</button><div id="records"><p class="empty">Load capability to view records.</p></div></section>
-    <section class="card policy"><p class="eyebrow">MOCK POLICY LAB</p><h2>See a safe denial</h2><p>Request <code>purge_incident_history</code> against a deterministic local deny policy.</p><p>No destructive executor exists. This policy test creates no core Action.</p><button id="policy-test" class="danger">Test simulated forbidden operation</button><pre id="policy-result">No policy test yet.</pre></section>
+    <section class="card policy"><p id="policy-lab-label" class="eyebrow">MOCK POLICY LAB</p><h2>See a safe denial</h2><p id="policy-lab-description">Request purge_incident_history against a deterministic local deny policy.</p><p>No destructive executor exists. This policy test creates no core Action.</p><button id="policy-test" class="danger">Test simulated forbidden operation</button><pre id="policy-result">No policy test yet.</pre><p id="live-evidence" class="identifier"></p></section>
   </div>
-  <footer>Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · No production systems or live ArmorIQ calls</footer>
+  <footer id="mode-footer">Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · Mock ArmorIQ mode</footer>
 </main>
 </body></html>

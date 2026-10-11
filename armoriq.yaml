@@ -1,0 +1,27 @@
+# Local review template: installed armoriq-sdk 0.6.10.
+# Set the approved HTTPS MCP URL only in the private generated registration config.
+version: v1
+identity:
+  api_key: $ARMORIQ_API_KEY
+  user_id: safeops-local-operator
+  agent_id: aegis-relay
+environment: sandbox
+proxy:
+  url: https://proxy.armoriq.ai
+  timeout: 2
+  max_retries: 0
+mcp_servers:
+  - id: aegis-relay-mcp
+    url: http://127.0.0.1:8766/mcp
+    description: Aegis Relay protected synthetic incident handoffs
+    auth:
+      type: bearer
+      token: $SAFEOPS_MCP_BEARER
+policy:
+  allow:
+    - aegis-relay-mcp.create_incident_handoff
+  deny:
+    - aegis-relay-mcp.purge_incident_history
+intent:
+  ttl_seconds: 10
+  require_csrg: true

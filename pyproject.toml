@@ -5,6 +5,7 @@ description = "Aegis Relay — A permissioned AI agent for secure incident hando
 requires-python = ">=3.13,<3.14"
 dependencies = [
   "agentic-intent-gate @ git+https://github.com/miku-wwl/agentic-intent-gate.git@fd742b783058a53400c465b4ab59c6e80715895a",
+  "armoriq-sdk==0.6.10",
   "fastapi>=0.115,<1",
   "httpx>=0.28,<1",
   "uvicorn>=0.34,<1",
@@ -22,6 +23,12 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/safeops"]
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+  "src", "scripts", "tests", "docs", "README.md", "AGENTS.md",
+  "pyproject.toml", "uv.lock", "armoriq.yaml", ".env.example", ".gitignore",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true

@@ -8,9 +8,9 @@ This repository is a **Hackathon application that consumes an existing Python Ag
 **Python distribution:** `agentic-intent-gate`  
 **Public integration module:** `agentic_intent_gate.runtime`  
 **Qualified version target:** `v0.1.0` (verify that the release tag exists before relying on it)  
-**Pinned release commit:** `<VERIFIED_40_CHARACTER_RELEASE_COMMIT_SHA>`
+**Pinned release commit:** `fd742b783058a53400c465b4ab59c6e80715895a`
 
-> **Setup required:** Replace the placeholder with the actual, verified release commit SHA. Never install from a moving `main` branch for reproducible builds. Private-repository access requires authenticated Git in local development and CI; never embed tokens in URLs, code, or logs.
+> **Verified release pin:** The dependency uses the verified `v0.1.0` release commit below. Never install from a moving `main` branch for reproducible builds. Private-repository access requires authenticated Git in local development and CI; never embed tokens in URLs, code, or logs.
 
 ## Dependency Setup
 
@@ -19,7 +19,7 @@ Declare the dependency in this project's `pyproject.toml` (adapt to its existing
 ```toml
 [project]
 dependencies = [
-  "agentic-intent-gate @ git+https://github.com/miku-wwl/agentic-intent-gate.git@<VERIFIED_40_CHARACTER_RELEASE_COMMIT_SHA>",
+  "agentic-intent-gate @ git+https://github.com/miku-wwl/agentic-intent-gate.git@fd742b783058a53400c465b4ab59c6e80715895a",
 ]
 ```
 

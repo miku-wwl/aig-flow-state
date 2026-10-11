@@ -10,7 +10,17 @@ import httpx
 
 
 class ServerHarness:
-    def __init__(self, state, *, provider="fixture", fixture_fault="none", executor_fault="none"):
+    def __init__(
+        self,
+        state,
+        *,
+        provider="fixture",
+        fixture_fault="none",
+        executor_fault="none",
+        enforcement_mode="mock",
+        sdk_fault="none",
+        offline_sdk=False,
+    ):
         self.state = Path(state)
         self.provider, self.fixture_fault, self.executor_fault = (
             provider,
@@ -23,6 +33,11 @@ class ServerHarness:
         self.url = f"http://127.0.0.1:{self.port}"
         self.process = None
         self.log = None
+        self.enforcement_mode, self.sdk_fault, self.offline_sdk = (
+            enforcement_mode,
+            sdk_fault,
+            offline_sdk,
+        )
 
     def start(self):
         self.log = (self.state / "server.log").open("a", encoding="utf-8")
@@ -43,6 +58,11 @@ class ServerHarness:
                 self.fixture_fault,
                 "--executor-fault",
                 self.executor_fault,
+                "--enforcement-mode",
+                self.enforcement_mode,
+                "--sdk-fault",
+                self.sdk_fault,
+                *(["--offline-sdk"] if self.offline_sdk else []),
             ],
             stdin=subprocess.PIPE,
             stdout=self.log,

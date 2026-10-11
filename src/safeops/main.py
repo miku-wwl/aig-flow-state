@@ -87,6 +87,17 @@ def create_app(settings, *, provider=None, enforcement=None):
                         },
                         status_code=401,
                     )
+                if (
+                    getattr(request.app.state.enforcement, "mode", "MOCK") == "LIVE"
+                    and request.method == "POST"
+                    and path.startswith("/api/actions/")
+                    and path.endswith("/execute")
+                ):
+                    try:
+                        # Public read supplies a hint; issuance rechecks the durable claim.
+                        request.app.state.enforcement.issuer.track(path.split("/")[3])
+                    except Exception:
+                        return JSONResponse({"error": {"code": "CORE_DENIED"}}, status_code=403)
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -115,9 +126,20 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     init = commands.add_parser("init", help="Exclusively provision a NEW private state directory")
     init.add_argument("--state", type=Path, default=Path(".runtime/local"))
+    init_live = commands.add_parser(
+        "init-live", help="Exclusively provision private MCP keys/audit"
+    )
+    init_live.add_argument("--state", type=Path, default=Path(".runtime/local"))
+    mcp = commands.add_parser(
+        "mcp", help="Serve only the protected MCP on a separate loopback port"
+    )
+    mcp.add_argument("--state", type=Path, default=Path(".runtime/local"))
+    mcp.add_argument("--port", type=int, default=8766)
+    mcp.add_argument("--diagnostics", action="store_true", help="Private sanitized MCP diagnostics")
     serve = commands.add_parser("serve", help="Serve an already initialized local runtime")
     serve.add_argument("--state", type=Path)
     serve.add_argument("--provider", choices=["ollama", "fixture"])
+    serve.add_argument("--enforcement-mode", choices=["mock", "real"])
     serve.add_argument("--port", type=int, default=8765)
     serve.add_argument("--predecessor-stopped", action="store_true", required=True)
     serve.add_argument(
@@ -129,6 +151,22 @@ def main():
         "--executor-fault", choices=["none", "post_commit_ack_loss", "policy_deny"], default="none"
     )
     args = parser.parse_args()
+    if args.command == "init-live":
+        from safeops.integration.dispatch_permit import provision_live
+
+        provision_live(args.state)
+        print("Provisioned private dispatch keys, service bearer and live audit; no cloud changes.")
+        return
+    if args.command == "mcp":
+        from safeops.mcp.server import create_mcp_app
+
+        uvicorn.run(
+            create_mcp_app(args.state, diagnostics=args.diagnostics),
+            host="127.0.0.1",
+            port=args.port,
+            access_log=False,
+        )
+        return
     if args.command == "init":
         provision(args.state)
         print(f"Initialized private state: {args.state.resolve()}")
@@ -141,6 +179,7 @@ def main():
         provider=args.provider or settings.provider,
         fixture_fault=args.fixture_fault,
         executor_fault=args.executor_fault,
+        enforcement_mode=args.enforcement_mode or settings.enforcement_mode,
     )
     uvicorn.run(create_app(settings), host="127.0.0.1", port=args.port, access_log=False)
 

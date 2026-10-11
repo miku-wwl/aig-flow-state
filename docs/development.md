@@ -1,9 +1,17 @@
 # Aegis Relay — Development and reproduction
 
+Phase 2 adds explicit `SAFEOPS_ENFORCEMENT_MODE=mock|real` (default mock),
+`safeops init-live`, and a separate loopback-only `safeops mcp` service. See
+[the current setup](phase2-setup.md) and [architecture decision](phase2-architecture.md).
+The existing identifiers and SQLite schemas below remain unchanged. In real mode,
+`/api/policy/test` permits only the nondestructive canary; writes through this route
+are CORE_DENIED. `/api/policy/evidence` reads the separate private live audit store.
+
 **Trust the intent. Govern the action.** A permissioned AI agent for secure incident
-handoffs. The current stage is Phase 1 Local E2E for Flow State — AI Agent & MCP
-Hackathon, organized by ArmorIQ. Enforcement remains a local ArmorIQ simulation;
-real SDK and policy enforcement are Phase 2 work.
+handoffs, built for Flow State — AI Agent & MCP Hackathon, organized by ArmorIQ.
+Phase 1's mock workflow remains the default. Phase 2's real SDK/MCP execution path
+is implemented. Real registration and canary denial were verified; a real handoff
+ended Unknown. See the current report for the remaining platform/audit blockers.
 
 ## Branding and compatibility
 
@@ -72,8 +80,8 @@ the loopback service. No mutation is replayed when a browser refresh restores a 
 | `POST /api/actions/{uuid}/authorize` | Core `{expected_action_version}` plus UUID key |
 | `POST /api/actions/{uuid}/execute` | Core `{expected_action_version}` plus UUID key |
 | `GET /api/handoffs` | Consumer persisted business records |
-| `POST /api/policy/test` | Consumer `{operation: purge_incident_history or create_incident_handoff}`; policy check only |
-| `GET /api/policy/evidence` | Consumer local mock decision evidence |
+| `POST /api/policy/test` | Mock policy check; real mode probes only the nondestructive canary and rejects writes |
+| `GET /api/policy/evidence` | Private mock decision evidence or separate sanitized live audit |
 
 Use backend-returned versions. A normally validated Run awaits approval at version 4;
 approval produces version 5. Admission produces Pending Action version 1; authorization
@@ -122,11 +130,11 @@ state directory; fresh test directories and installations are explicitly isolate
 
 ## Phase 2 changes
 
-Implement an SDK-backed adapter at `integration/armoriq_boundary.py`, inject it from
-trusted `integration/runtime_composition.py`, and keep mock tests offline. Obtain and
-privately configure account/API credentials and end-user identity; select an SDK version
-based on inspected signatures, register transport if needed, verify real allow/deny
-policies, capture safe remote invocation/audit evidence and check competition rules.
-Clarify service unavailability versus ambiguous invocation, policy holds, parameter
-digests, timeouts and documented idempotency. None of those live integration gates are
-satisfied by Phase 1. No real ArmorIQ integration tests exist or run in this phase.
+`integration/live_armoriq.py` owns actual SDK capture/token/invoke and receipt verification;
+trusted runtime composition explicitly chooses mock or real. `integration/dispatch_permit.py`
+binds a claimed, authorized core Action to the protected `mcp/server.py`. The mock
+check-only protocol remains separate. Real setup is explicit, uses existing credentials
+and never silently falls back to mock. Offline SDK/browser tests carry an explicit
+OFFLINE SDK TEST badge and are distinct from opt-in platform evidence. See the
+[architecture](phase2-architecture.md), [setup](phase2-setup.md), and
+[qualification report](phase2-e2e-report.md) for commands, classifications and actual results.

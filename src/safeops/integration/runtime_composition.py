@@ -92,9 +92,16 @@ def composition(settings, *, provider=None, enforcement=None, provision_gate=Fal
             settings.ollama_url, model=settings.model, timeout=settings.model_timeout
         )
     )
-    enforcement = enforcement or MockArmorIQClient(
-        binding, allowed_tools=set() if settings.executor_fault == "policy_deny" else None
-    )
+    if settings.enforcement_mode == "real":
+        from safeops.integration.live_armoriq import LiveArmorIQExecution
+
+        enforcement = enforcement or LiveArmorIQExecution(directory, store)
+        if not isinstance(enforcement, LiveArmorIQExecution):
+            raise ValueError("Real mode requires real execution; no mock fallback")
+    else:
+        enforcement = enforcement or MockArmorIQClient(
+            binding, allowed_tools=set() if settings.executor_fault == "policy_deny" else None
+        )
     executor = HandoffExecutor(
         store, enforcement, lose_ack=settings.executor_fault == "post_commit_ack_loss"
     )
@@ -110,13 +117,19 @@ def composition(settings, *, provider=None, enforcement=None, provision_gate=Fal
     if not (directory / "gate.sqlite3").exists():
         if not provision_gate:
             raise ValueError("Missing gate DB; initialize a new private state directory explicitly")
-    with open_runtime(
-        gate_path=directory / "gate.sqlite3",
-        provider=provider,
-        capability=capability_for(binding),
-        registry=registry,
-        verifier=verifier,
-        policy=policy,
-        predecessor_stopped=settings.predecessor_stopped,
-    ) as runtime:
-        yield runtime, store, provider, enforcement, executor
+    try:
+        with open_runtime(
+            gate_path=directory / "gate.sqlite3",
+            provider=provider,
+            capability=capability_for(binding),
+            registry=registry,
+            verifier=verifier,
+            policy=policy,
+            predecessor_stopped=settings.predecessor_stopped,
+        ) as runtime:
+            if settings.enforcement_mode == "real":
+                enforcement.issuer.runtime = runtime
+            yield runtime, store, provider, enforcement, executor
+    finally:
+        if settings.enforcement_mode == "real":
+            enforcement.close()

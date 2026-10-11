@@ -21,10 +21,9 @@ class EnforcementDecision:
 
 
 class EnforcementClient(Protocol):
-    """Consumer boundary, NOT a claim about ArmorIQ SDK method signatures.
+    """Mock check-only boundary; the real adapter separately owns proxy forwarding.
 
-    Phase 2 must review whether enforce-only or proxy invocation is appropriate.
-    No ambiguous remote result may be converted into a local success or retry.
+    No ambiguous remote result may become local success or an automatic retry.
     """
 
     async def check(

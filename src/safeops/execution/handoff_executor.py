@@ -37,6 +37,9 @@ class HandoffExecutor:
                 return evidence(Outcome.CONFIRMED_FAILURE, reason="INPUT_REJECTED")
             if context.expired():
                 return ToolOutcome(Outcome.UNKNOWN_OUTCOME)
+            if getattr(self.enforcement, "mode", "MOCK") == "LIVE":
+                # Forwarded execution owns the write. Never fall through to local persist.
+                return await self.enforcement.execute(spec, effect_key, context)
             decision = await self.enforcement.check(
                 spec, approved_payload_digest=spec.payload_digest()
             )

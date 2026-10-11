@@ -5,7 +5,8 @@
 A permissioned AI agent for secure incident handoffs.
 
 Built for **Flow State — AI Agent & MCP Hackathon**, organized by **ArmorIQ**.
-Current stage: **Phase 1 Local E2E**, with simulated ArmorIQ enforcement.
+Current stage: **Phase 2.1 local protocol/auth fixes qualified: 128 offline tests,
+including 11 Chrome tests; real ArmorIQ E2E remains BLOCKED**.
 
 Phase 1 is a local, single-operator application for one workflow: creating a synthetic
 incident handoff. A real Ollama model proposes a bounded Plan. You review the persisted
@@ -18,10 +19,28 @@ resolve to that commit. Core validation, exact approval binding, authorization, 
 Action claiming, CAS, idempotency receipts and recovery belong to that shared package.
 No core source is copied or modified.
 
-ArmorIQ is **only simulated locally** in Phase 1. The UI says
-“Simulated policy enforcement — Phase 1 offline mode.” A live-local Ollama run still
-uses mock enforcement. No ArmorIQ credentials, sponsor API calls, production systems,
-cloud deployment or paid APIs are involved.
+Enforcement defaults to **mock**, preserving the Phase 1 workflow. Explicit `real`
+mode uses pinned `armoriq-sdk==0.6.10`, a signed core dispatch permit and a separate
+protected MCP. ArmorIQ proxy execution owns the single business write, and the
+consumer verifies its receipt against the durable store. Missing configuration fails
+closed. Real authentication, temporary public MCP discovery, agent/MCP registration
+and a genuine canary policy denial were verified on 11 October 2026. The single
+real handoff attempt obtained a platform Plan ID but ended Unknown, with zero local
+business records. It was not retried. Dashboard policy status/audit remain blocked
+by unavailable browser connectivity and JWT-only APIs. Local SDK transport tests
+do not prove successful cloud execution. The temporary tunnel is retired after testing.
+See [Phase 2 architecture](docs/phase2-architecture.md),
+[setup and approval scope](docs/phase2-setup.md),
+[current evidence](docs/phase2-e2e-report.md),
+[Phase 2.1 diagnosis](docs/phase2-blocker-diagnosis.md),
+[submission draft](docs/submission.md), and
+[demo script](docs/demo-script.md).
+
+Phase 2.1 fixes malformed authentication, version negotiation and unsupported
+protocol headers, and adds private stage diagnostics. Local discovery returns two
+tools; freshly read cloud inventory still returns zero and retains the retired URL.
+No new real Action or deployment was attempted. SDK-only enforcement and free
+stable subdomain options are documented for review; DNS changes are not required.
 
 ## Start locally
 
@@ -131,9 +150,8 @@ After a post-commit acknowledgement failure, the Action is `Unknown` even if the
 business viewer shows a record. It has no confirmed success receipt. Refresh/restart
 never redispatches it. Aegis Relay exposes no automatic reconciliation or retry for Unknown.
 
-Phase 2 must replace the consumer enforcement boundary with a reviewed SDK adapter,
-configure an ArmorIQ account and policies, determine registered tool transport and
-idempotency guarantees, and collect real invocation/policy audit evidence. The official
+Phase 2 implements a separate SDK proxy adapter and protected MCP. The official
 [ArmorIQ Python SDK documentation](https://docs.armoriq.ai/platform/sdk-cli/python-sdk)
-was inspected; its plan/token/invoke flow is not implemented or impersonated here.
-Mock results alone do not establish competition readiness.
+and installed 0.6.10 API were inspected; its actual capture/token/invoke flow is used.
+Successful real forwarding, one matching durable receipt and dashboard audit evidence
+remain unqualified. Mock results alone do not establish competition readiness.

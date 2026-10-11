@@ -48,7 +48,7 @@ function renderAction() {
   $('action-id').textContent = action ? `Action ${action.action_id} · Version ${action.version}` : '';
   $('receipt').textContent = action?.result?.receipt_reference || '—';
   $('action-json').textContent = action ? JSON.stringify(action,null,2) : 'No Action yet.';
-  const explanations = {Pending:'Approval is recorded. Independent authorization is still required.',Authorized:'Authorization is recorded. Execute only when ready.',Succeeded:'Confirmed durable handoff. Match this receipt with the business record below.',Failed:'No-effect failure confirmed. Inspect simulated policy evidence if applicable.',Unknown:'Outcome unknown: a handoff may exist. No automatic retry or redispatch is permitted.',Executing:'Backend execution is in progress; refresh only reads state.'};
+  const explanations = {Pending:'Approval is recorded. Independent authorization is still required.',Authorized:'Authorization is recorded. Execute only when ready.',Succeeded:'Confirmed durable handoff. Match this receipt with the business record below.',Failed:'No-effect failure confirmed. Inspect policy evidence if applicable.',Unknown:'Outcome unknown: a handoff may exist. No automatic retry or redispatch is permitted.',Executing:'Backend execution is in progress; refresh only reads state.'};
   $('action-message').textContent = explanations[action?.state] || 'Awaiting your review.';
 }
 async function records() {
@@ -58,6 +58,9 @@ async function records() {
     const item=document.createElement('article'); item.className='record'; item.dataset.receipt=record.receipt_reference;
     [['strong',record.incident_id + ' · ' + record.summary],['p',record.handoff_note],['p','Receipt ' + record.receipt_reference],['p','Effect ' + record.effect_key + ' · ' + record.created_at]].forEach(([tag,text],index) => {const child=document.createElement(tag); child.textContent=text; if(index>=2)child.className='identifier'; item.append(child);}); $('records').append(item);
   });
+  const evidence = await api('/api/policy/evidence');
+  const latest = evidence.data.events.at(-1);
+  $('live-evidence').textContent = evidence.data.mode === 'LIVE' && latest ? `${latest.status} · Action ${latest.action_id || 'canary'} · Plan ${latest.plan_id || 'unavailable'} · Receipt ${latest.receipt_reference || 'unconfirmed'}` : '';
 }
 async function loadRun(id) {
   const {data} = await api('/api/runs/' + encodeURIComponent(id)); run=data;
@@ -67,6 +70,15 @@ async function loadRun(id) {
 async function updateStatus() {
   const {data} = await api('/api/status'); scope=data.execution_scope;
   $('provider-mode').textContent = data.provider.mode === 'fixture' ? 'Deterministic fixture · offline' : `Live local Ollama · ${data.provider.model || 'discover phi4-mini'}`;
+  const live = data.enforcement === 'LIVE';
+  const offline = live && data.armoriq.transport === 'OFFLINE_TEST';
+  $('mode-chip').textContent = offline ? 'LOCAL / OFFLINE SDK TEST' : live ? 'LOCAL / LIVE ARMORIQ' : 'LOCAL / MOCK';
+  $('enforcement-mode').textContent = data.enforcement_label;
+  $('integration-status').textContent = live ? `Connectivity: ${data.armoriq.connectivity} · Registration: ${data.armoriq.registration}` : 'Local single-operator demo · Synthetic incidents only';
+  $('policy-lab-label').textContent = offline ? 'OFFLINE POLICY TEST' : live ? 'LIVE POLICY BOUNDARY' : 'MOCK POLICY LAB';
+  $('policy-lab-description').textContent = live ? 'Probe purge_incident_history with a separate valid ArmorIQ intent. Only an explicit policy denial proves this boundary.' : 'Request purge_incident_history against a deterministic local deny policy.';
+  $('policy-test').textContent = offline ? 'Test offline forbidden-operation response' : live ? 'Test real forbidden-operation policy' : 'Test simulated forbidden operation';
+  $('mode-footer').textContent = `Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · ${offline ? 'Offline SDK transport — no cloud qualification' : live ? 'Real ArmorIQ mode — verify policy and audit evidence' : 'Mock ArmorIQ mode'}`;
   return data;
 }
 $('capability-file').addEventListener('change', () => perform(async () => {
