@@ -3,16 +3,16 @@ import json
 import re
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 import httpx
 import pytest
 from playwright.sync_api import expect, sync_playwright
 
-from tests.server_harness import ServerHarness, save_evidence
+from tests.server_harness import ServerHarness, artifact_directory, save_evidence
 
 pytestmark = pytest.mark.browser
-SCREENSHOTS = Path(".artifacts/screenshots")
+
+SCREENSHOTS = artifact_directory("screenshots")
 
 
 @pytest.fixture

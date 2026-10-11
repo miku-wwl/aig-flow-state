@@ -1,5 +1,16 @@
 # Phase 2 qualification — 11 October 2026
 
+**Current result: Phase 2.4, 12 October NZDT / 11 October UTC.** The existing
+FastAPI/real Chrome application performed one explicitly approved fresh SDK-only
+INC-24001 write: real remote Allow, one durable record, matching receipt and Core
+Succeeded. Core claim-to-terminal: 1,259.307 ms within its unchanged five seconds.
+Final consumer regression: **179 passed**, including **14 Chrome tests**, in
+369.90 seconds. SDK audit POST and Plan completion were acknowledged; independent
+new audit readback is BLOCKED (401/no connected authenticated dashboard).
+Historical screenshots verify the earlier Phase 2.3 audit, not this new execution.
+See the [complete A–J report](phase24-application-e2e-report.md). All results below
+are retained historical evidence; the old proxy Unknown was never retried.
+
 **Latest addendum: Phase 2.1, 12 October NZDT / 11 October UTC.** This file's original
 Phase 2 results below remain historical. Current diagnosis and source changes are
 in [phase2-blocker-diagnosis.md](phase2-blocker-diagnosis.md). Current tests: **128

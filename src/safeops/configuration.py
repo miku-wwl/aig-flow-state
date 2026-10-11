@@ -31,9 +31,9 @@ class Settings:
             raise ValueError("Ollama must use a local HTTP endpoint")
         if self.provider not in {"ollama", "fixture"}:
             raise ValueError("Choose ollama or fixture explicitly")
-        if self.enforcement_mode not in {"mock", "real"}:
-            raise ValueError("Choose mock or real enforcement explicitly")
-        if self.enforcement_mode == "real" and self.executor_fault != "none":
+        if self.enforcement_mode not in {"mock", "real", "proxy", "sdk-only"}:
+            raise ValueError("Choose mock, proxy (legacy real) or sdk-only explicitly")
+        if self.enforcement_mode != "mock" and self.executor_fault != "none":
             raise ValueError("Real enforcement does not accept mock execution faults")
         if not math.isfinite(self.model_timeout) or not 0 < self.model_timeout <= 28:
             raise ValueError("Model timeout must be in (0, 28], within the core HTTP budget")

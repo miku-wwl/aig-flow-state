@@ -92,12 +92,18 @@ def composition(settings, *, provider=None, enforcement=None, provision_gate=Fal
             settings.ollama_url, model=settings.model, timeout=settings.model_timeout
         )
     )
-    if settings.enforcement_mode == "real":
+    if settings.enforcement_mode in {"real", "proxy"}:
         from safeops.integration.live_armoriq import LiveArmorIQExecution
 
         enforcement = enforcement or LiveArmorIQExecution(directory, store)
         if not isinstance(enforcement, LiveArmorIQExecution):
             raise ValueError("Real mode requires real execution; no mock fallback")
+    elif settings.enforcement_mode == "sdk-only":
+        from safeops.integration.sdk_application import SDKOnlyApplication
+
+        enforcement = enforcement or SDKOnlyApplication(directory, store)
+        if not isinstance(enforcement, SDKOnlyApplication):
+            raise ValueError("SDK-only requires the qualified execution adapter")
     else:
         enforcement = enforcement or MockArmorIQClient(
             binding, allowed_tools=set() if settings.executor_fault == "policy_deny" else None
@@ -127,9 +133,11 @@ def composition(settings, *, provider=None, enforcement=None, provision_gate=Fal
             policy=policy,
             predecessor_stopped=settings.predecessor_stopped,
         ) as runtime:
-            if settings.enforcement_mode == "real":
+            if settings.enforcement_mode in {"real", "proxy"}:
                 enforcement.issuer.runtime = runtime
+            elif settings.enforcement_mode == "sdk-only":
+                enforcement.runtime = runtime
             yield runtime, store, provider, enforcement, executor
     finally:
-        if settings.enforcement_mode == "real":
+        if settings.enforcement_mode != "mock":
             enforcement.close()

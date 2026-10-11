@@ -74,7 +74,7 @@ def create_app(settings, *, provider=None, enforcement=None):
             if path not in {"/api/health", "/api/status"}:
                 headers = request.headers.getlist("authorization")
                 try:
-                    request.app.state.runtime.verifier.verify(
+                    principal = request.app.state.runtime.verifier.verify(
                         headers[0] if len(headers) == 1 else None
                     )
                 except Exception:
@@ -95,10 +95,64 @@ def create_app(settings, *, provider=None, enforcement=None):
                 ):
                     try:
                         # Public read supplies a hint; issuance rechecks the durable claim.
-                        request.app.state.enforcement.issuer.track(path.split("/")[3])
+                        boundary = request.app.state.enforcement
+                        action_id = path.split("/")[3]
+                        if settings.enforcement_mode == "sdk-only":
+                            current = request.app.state.runtime.gateway.get(action_id, principal)
+                            # Core owns request validation and terminal idempotency replay.
+                            # Only a syntactically valid fresh command is stage-gated here.
+                            keys = request.headers.getlist("idempotency-key")
+                            from agentic_intent_gate.runtime import ActionCommand
+
+                            try:
+                                length = request.headers.get("content-length", "")
+                                if not length.isdigit() or int(length) > 1024:
+                                    raise ValueError
+                                body = await request.body()
+                                if len(body) > 1024 or len(keys) != 1:
+                                    raise ValueError
+                                command = ActionCommand.parse(
+                                    action_id, body.decode("utf-8"), idempotency_key=keys[0]
+                                )
+                            except Exception:
+                                pass
+                            else:
+                                if (
+                                    current.state.value == "Authorized"
+                                    and command.expected_action_version == current.version
+                                ):
+                                    try:
+                                        boundary.require_ready(action_id, principal)
+                                    except Exception:
+                                        return JSONResponse(
+                                            {
+                                                "error": {
+                                                    "code": "SDK_STAGE_REQUIRED",
+                                                    "message": (
+                                                        "Prepare the Authorized Action explicitly; "
+                                                        "the stage is missing, invalid or expired."
+                                                    ),
+                                                }
+                                            },
+                                            status_code=409,
+                                        )
+                        else:
+                            boundary.issuer.track(action_id)
                     except Exception:
                         return JSONResponse({"error": {"code": "CORE_DENIED"}}, status_code=403)
         response = await call_next(request)
+        if (
+            settings.enforcement_mode == "sdk-only"
+            and request.method == "POST"
+            and path.startswith("/api/actions/")
+            and path.endswith("/execute")
+            and response.status_code in {200, 202}
+        ):
+            try:
+                await app.state.enforcement.finalize(path.split("/")[3], principal)
+            except Exception:
+                # Core's durable terminal result survives consumer audit unavailability.
+                pass
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -139,7 +193,7 @@ def main():
     serve = commands.add_parser("serve", help="Serve an already initialized local runtime")
     serve.add_argument("--state", type=Path)
     serve.add_argument("--provider", choices=["ollama", "fixture"])
-    serve.add_argument("--enforcement-mode", choices=["mock", "real"])
+    serve.add_argument("--enforcement-mode", choices=["mock", "real", "proxy", "sdk-only"])
     serve.add_argument("--port", type=int, default=8765)
     serve.add_argument("--predecessor-stopped", action="store_true", required=True)
     serve.add_argument(

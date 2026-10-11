@@ -105,6 +105,10 @@ class ServerHarness:
 
 
 def save_evidence(name, value):
-    directory = Path(".artifacts/evidence")
+    directory = artifact_directory("evidence")
     directory.mkdir(parents=True, exist_ok=True)
     (directory / (name + ".json")).write_text(json.dumps(value, indent=2), encoding="utf-8")
+
+
+def artifact_directory(name):
+    return Path(os.getenv("SAFEOPS_TEST_ARTIFACTS", ".artifacts")) / name

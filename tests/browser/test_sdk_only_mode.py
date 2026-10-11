@@ -1,0 +1,81 @@
+"""Real Chrome clicks against FastAPI + actual SDK, explicitly OFFLINE network."""
+
+import json
+
+import pytest
+from playwright.sync_api import expect, sync_playwright
+
+from tests.browser.test_e2e import admit, generate, unlock
+from tests.server_harness import ServerHarness, artifact_directory, save_evidence
+
+pytestmark = pytest.mark.browser
+
+
+@pytest.mark.parametrize(
+    "fault,terminal,audit",
+    [
+        ("none", "Succeeded", "SDK_AUDIT_POST_ACKNOWLEDGED"),
+        ("deny", "Failed", "SDK_FAILED"),
+        ("report_error", "Succeeded", "SDK_AUDIT_UNVERIFIED"),
+    ],
+)
+def test_sdk_only_clicks_and_persisted_restore(state, fault, terminal, audit):
+    server = ServerHarness(state, enforcement_mode="sdk-only", offline_sdk=True, sdk_fault=fault)
+    try:
+        server.start()
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(channel="chrome", headless=True)
+            page = browser.new_page(viewport={"width": 1440, "height": 1100})
+            page.set_default_timeout(15000)
+            generate(page, server)
+            expect(page.locator("#mode-chip")).to_have_text("LOCAL / OFFLINE SDK TEST")
+            expect(page.locator("#prepare-sdk")).to_be_disabled()
+            admit(page)
+            expect(page.locator("#prepare-sdk")).to_be_disabled()
+            page.locator("#try-unauthorized").click()
+            expect(page.locator("#error")).to_contain_text("ACTION_NOT_EXECUTABLE")
+            page.locator("#authorize").click()
+            expect(page.locator("#action-state")).to_have_text("Authorized")
+            expect(page.locator("#sdk-stage-status")).to_contain_text("MISSING")
+            expect(page.locator("#execute")).to_be_disabled()
+            page.locator("#prepare-sdk").click()
+            expect(page.locator("#sdk-stage-status")).to_contain_text("READY")
+            assert server.get("/api/handoffs")["records"] == []
+            page.locator("#execute").click()
+            expect(page.locator("#action-state")).to_have_text(terminal)
+            expect(page.locator("#sdk-audit-status")).to_contain_text(audit)
+            expected_policy = (
+                "Explicit Allow NOT_CONFIRMED" if fault == "deny" else "Explicit Allow CONFIRMED"
+            )
+            expect(page.locator("#sdk-policy-status")).to_contain_text("OFFLINE test")
+            expect(page.locator("#sdk-policy-status")).to_contain_text(expected_policy)
+            action = json.loads(page.locator("#action-json").text_content())
+            records = server.get("/api/handoffs")["records"]
+            assert len(records) == (0 if terminal == "Failed" else 1)
+            page.locator("#replay").click()
+            expect(page.locator("#notice")).to_contain_text("receipt is unchanged")
+            assert server.get("/api/handoffs")["records"] == records
+            page.reload()
+            unlock(page, server)
+            expect(page.locator("#action-state")).to_have_text(terminal)
+            expect(page.locator("#sdk-audit-status")).to_contain_text(audit)
+            expect(page.locator("#sdk-policy-status")).to_contain_text(expected_policy)
+            output = artifact_directory("screenshots")
+            output.mkdir(parents=True, exist_ok=True)
+            page.screenshot(path=str(output / f"phase24-offline-sdk-{fault}.png"), full_page=True)
+            save_evidence(
+                f"phase24-offline-sdk-{fault}", {"platform": "OFFLINE_TEST", "action": action}
+            )
+            browser.close()
+        server.stop()
+        server.start()
+        assert server.get(f"/api/actions/{action['action_id']}")["state"] == terminal
+        assert server.get("/api/handoffs")["records"] == records
+        assert (
+            server.get(f"/api/actions/{action['action_id']}/sdk-stage")["audit"]["status"] == audit
+        )
+        policy = server.get(f"/api/actions/{action['action_id']}/sdk-stage")["policy"]
+        assert policy["transport"] == "OFFLINE_TEST"
+        assert policy["explicit_allow_confirmed"] == (terminal == "Succeeded")
+    finally:
+        server.stop()

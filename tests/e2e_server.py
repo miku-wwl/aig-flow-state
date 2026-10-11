@@ -18,15 +18,22 @@ def main():
     parser.add_argument("--provider", default="fixture")
     parser.add_argument("--fixture-fault", default="none")
     parser.add_argument("--executor-fault", default="none")
-    parser.add_argument("--enforcement-mode", choices=["mock", "real"], default="mock")
+    parser.add_argument(
+        "--enforcement-mode", choices=["mock", "real", "proxy", "sdk-only"], default="mock"
+    )
     parser.add_argument("--sdk-fault", default="none")
     parser.add_argument("--offline-sdk", action="store_true")
     args = parser.parse_args()
     enforcement = None
     if args.offline_sdk:
-        from tests.armoriq_harness import offline_live
+        if args.enforcement_mode == "sdk-only":
+            from tests.test_sdk_application import offline_application
 
-        enforcement = offline_live(args.state, fault=args.sdk_fault).live
+            enforcement, _ = offline_application(args.state, fault=args.sdk_fault)
+        else:
+            from tests.armoriq_harness import offline_live
+
+            enforcement = offline_live(args.state, fault=args.sdk_fault).live
     app = create_app(
         Settings(
             state=args.state,

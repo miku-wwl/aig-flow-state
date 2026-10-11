@@ -1,11 +1,10 @@
 import json
-from pathlib import Path
 
 import pytest
 from playwright.sync_api import expect, sync_playwright
 
 from tests.browser.test_e2e import admit, generate, unlock
-from tests.server_harness import ServerHarness, save_evidence
+from tests.server_harness import ServerHarness, artifact_directory, save_evidence
 
 pytestmark = pytest.mark.browser
 
@@ -48,7 +47,7 @@ def test_live_ui_with_offline_sdk_transport(state, fault, expected):
             unlock(page, harness)
             expect(page.locator("#action-state")).to_have_text(expected)
             assert harness.get("/api/handoffs")["records"] == records
-            directory = Path(".artifacts/screenshots")
+            directory = artifact_directory("screenshots")
             directory.mkdir(parents=True, exist_ok=True)
             page.screenshot(
                 path=str(directory / f"phase2-offline-live-{fault}.png"), full_page=True

@@ -5,8 +5,12 @@
 A permissioned AI agent for secure incident handoffs.
 
 Built for **Flow State — AI Agent & MCP Hackathon**, organized by **ArmorIQ**.
-Current stage: **Phase 2.1 local protocol/auth fixes qualified: 128 offline tests,
-including 11 Chrome tests; real ArmorIQ E2E remains BLOCKED**.
+Current stage: **Phase 2.4 SDK-only integrated into the existing FastAPI/browser
+application. One explicitly approved real browser execution succeeded with one
+durable record and matching receipt; final regression: 179 passed, including 14
+Chrome tests. New audit POST/completion are acknowledged; independent audit
+readback remains blocked, and submission readiness remains NO.** See the
+[Phase 2.4 report](docs/phase24-application-e2e-report.md) for final measured gates.
 
 Phase 1 is a local, single-operator application for one workflow: creating a synthetic
 incident handoff. A real Ollama model proposes a bounded Plan. You review the persisted
@@ -19,16 +23,33 @@ resolve to that commit. Core validation, exact approval binding, authorization, 
 Action claiming, CAS, idempotency receipts and recovery belong to that shared package.
 No core source is copied or modified.
 
-Enforcement defaults to **mock**, preserving the Phase 1 workflow. Explicit `real`
+Enforcement defaults to **mock**, preserving the Phase 1 workflow. Explicit `proxy`
+(legacy `real` remains an alias)
 mode uses pinned `armoriq-sdk==0.6.10`, a signed core dispatch permit and a separate
 protected MCP. ArmorIQ proxy execution owns the single business write, and the
 consumer verifies its receipt against the durable store. Missing configuration fails
 closed. Real authentication, temporary public MCP discovery, agent/MCP registration
 and a genuine canary policy denial were verified on 11 October 2026. The single
-real handoff attempt obtained a platform Plan ID but ended Unknown, with zero local
-business records. It was not retried. Dashboard policy status/audit remain blocked
-by unavailable browser connectivity and JWT-only APIs. Local SDK transport tests
-do not prove successful cloud execution. The temporary tunnel is retired after testing.
+historical proxy handoff attempt obtained a platform Plan ID but ended Unknown,
+with zero local business records. It was not retried. The temporary tunnel is retired.
+Local SDK transport tests do not prove real cloud execution.
+
+Explicit **`sdk-only`** uses the already qualified Phase 2.3 adapter in this same
+application: after exact Approval and independent Authorization, explicitly prepare
+an in-memory ArmorIQ Plan/token. Core then claims execution under its frozen
+five-second limit; actual HTTPS SDK policy enforcement must return explicit Allow
+for the expected policy. Exact Plan/arguments/binding/Action and a late signed permit
+are independently verified locally. Only the SDK-only consumer executor writes to
+the existing business SQLite store. SDK `report` and `complete_plan` run after Core
+Succeeded. Audit failure is separate from business success and cannot repeat the write.
+No public MCP, custom domain, tunnel or deployment is needed for this mode.
+
+The remote Allow is a **tool-level policy decision**. It does not prove remote
+argument or permit integrity. SDK-only tokens remain server memory only; expiry or
+restart requires explicit preparation of a still Authorized, never executed Action.
+Unknown Actions cannot be prepared or retried. Historical operator screenshots
+verify visible cloud rows and the Phase 2.3 API request/Action/receipt correlation;
+their row UUID is unverified and they are not new Phase 2.4 browser evidence.
 See [Phase 2 architecture](docs/phase2-architecture.md),
 [setup and approval scope](docs/phase2-setup.md),
 [current evidence](docs/phase2-e2e-report.md),
@@ -36,11 +57,9 @@ See [Phase 2 architecture](docs/phase2-architecture.md),
 [submission draft](docs/submission.md), and
 [demo script](docs/demo-script.md).
 
-Phase 2.1 fixes malformed authentication, version negotiation and unsupported
-protocol headers, and adds private stage diagnostics. Local discovery returns two
-tools; freshly read cloud inventory still returns zero and retains the retired URL.
-No new real Action or deployment was attempted. SDK-only enforcement and free
-stable subdomain options are documented for review; DNS changes are not required.
+Historical Phase 2.1 fixes and the optional protected MCP/proxy route are preserved.
+The [SDK-only qualification](docs/phase23-sdk-only-qualification.md) established
+execution feasibility; Phase 2.4 adds application/UI integration without Core edits.
 
 ## Start locally
 
@@ -80,6 +99,29 @@ namespaced by execution scope, and restores it with GET requests.
 6. Execute once. Match the `Succeeded` receipt with the persisted handoff record.
 7. Replay the exact request to observe the same receipt and one record, or refresh,
    reload the capability, and observe the preserved state.
+
+For SDK-only, exclusively initialize **new** private state, provision its local
+dispatch keys/audit store, and use existing ArmorIQ CLI credentials:
+
+```powershell
+uv run safeops init --state .runtime/sdk-only-demo
+uv run safeops init-live --state .runtime/sdk-only-demo
+uv run safeops serve --state .runtime/sdk-only-demo --provider ollama --enforcement-mode sdk-only --predecessor-stopped
+```
+
+After step 5, click **Prepare SDK-only execution**, then **Execute once** while the
+stage is READY. Preparation has no business effect. Expired or restart-lost stages
+require a new explicit click; no automatic token refresh happens. Do not use old
+Unknown state or replay historical INC-23001. A live business write requires exact
+human approval of the synthetic Plan. SDK-only's canary viewer labels the preserved
+Phase 2.2 remote denial as historical and makes no new policy request.
+
+| Config value | Execution | Label |
+| --- | --- | --- |
+| `mock` (default) | Simulated policy, local store | LOCAL / MOCK |
+| `sdk-only` | Actual SDK remote tool policy, verified local writer | ARMORIQ SDK-ONLY LIVE |
+| `proxy`, legacy `real` | Existing ArmorIQ proxy/MCP writer | PROXY LIVE |
+| Injected test transport | Actual SDK with explicitly offline HTTP transport | LOCAL / OFFLINE SDK TEST |
 
 For a visible safe denial, admit an Action and click **Test execution without
 authorization**, or use **Test simulated forbidden operation** in the mock policy lab.
@@ -138,6 +180,15 @@ trace with authorization headers is recorded. See
 [architecture](docs/architecture.md) for gate ownership, and
 [development](docs/development.md) for API and fault-reproduction details.
 
+To preserve historical test evidence, set `SAFEOPS_TEST_ARTIFACTS` to a **new**
+ignored directory and pass a fresh `--basetemp`, `--junitxml` and pytest cache directory.
+The SDK-only qualification driver is `scripts/sdk_only_browser_check.py`; it opens
+real Chrome, reviews a fresh real Ollama Plan, and waits for a closed approval file
+matching the Run and exact arguments. It never infers approval from timeout or EOF.
+Its optional resume opens the same unapproved Run with zero Actions/effects, or
+the exact still Authorized, never executed Action after a preparation interruption.
+Keep the output private and authorize the exact one write before supplying approval.
+
 ## Limits and Phase 2
 
 One trusted `create_incident_handoff` v1 tool, target `incident-desk`, adapter
@@ -153,5 +204,6 @@ never redispatches it. Aegis Relay exposes no automatic reconciliation or retry 
 Phase 2 implements a separate SDK proxy adapter and protected MCP. The official
 [ArmorIQ Python SDK documentation](https://docs.armoriq.ai/platform/sdk-cli/python-sdk)
 and installed 0.6.10 API were inspected; its actual capture/token/invoke flow is used.
-Successful real forwarding, one matching durable receipt and dashboard audit evidence
-remain unqualified. Mock results alone do not establish competition readiness.
+Historical proxy forwarding remains unqualified; its Unknown is preserved. SDK-only
+qualification and new application results are separate in the Phase 2.4 report.
+Mock results alone do not establish competition readiness. No submission has occurred.

@@ -6,63 +6,75 @@ A permissioned AI agent for secure incident handoffs.
 
 Repository: https://github.com/miku-wwl/aig-flow-state
 
-Project summary: Aegis Relay turns synthetic incident context into a bounded plan
-using local Ollama. The operator reviews and approves the exact persisted plan,
-then independently authorizes execution. The frozen Agentic Intent Gate runtime
-claims one durable Action. A signed dispatch permit binds that Action and payload
-to the protected MCP. In real mode, ArmorIQ captures the reviewed step, issues an
-intent token and governs proxy forwarding. The MCP writes one handoff; Aegis Relay
-accepts success only after checking its receipt against persisted business data.
+This is a copy-ready draft, not a submitted entry. Phase 2.4 changes remain local;
+the repository URL does not imply those changes have been published.
 
-Boundary demonstration: show the approved handoff succeeding once, then capture
-a separate valid intent for `purge_incident_history` and show the assigned ArmorIQ
-deny policy rejecting it with zero forbidden effects. The canary is nondestructive
-even if allowed accidentally. Show that core approval alone cannot execute, and
-that an ambiguous response remains Unknown without automatic redispatch.
+## Project description
 
-Current evidence: local implementation, actual SDK integration tests, local MCP
-protocol, Chrome/Ollama, persistence, replay and restart checks are qualified.
-Real agent/MCP registration, temporary protected public discovery and genuine canary
-policy denial were verified. The real handoff ended Unknown with zero local business
-records; successful forwarding/receipt and dashboard audit remain unqualified.
-**Do not submit this draft as a fully qualified live project yet.**
-Phase 2.1 local corrections pass the full 128-case offline suite, including 11
-Chrome tests. Fresh real SDK inventory still contains zero tools and the retired
-endpoint. No fresh real write was attempted. See [the current diagnosis](phase2-blocker-diagnosis.md).
-Video URL: not recorded. Public demo URL: not deployed. Real audit/registration
-links: not captured. Phase 2 commit URL: not committed. Do not invent these links.
+Aegis Relay turns synthetic incident context into a bounded Plan using local
+Ollama. The operator reviews and approves the exact persisted Plan, admits its
+Action and independently authorizes execution. The frozen [Agentic Intent Gate](https://github.com/miku-wwl/agentic-intent-gate)
+0.1.0 runtime owns these gates, durable claims, identity and outcome handling.
 
-## Verified competition information
+After authorization, the existing FastAPI UI explicitly pre-stages an ArmorIQ
+SDK-only Plan/token. During Core's unchanged five-second execution window, actual
+ArmorIQ remote enforcement must explicitly Allow the registered handoff tool under
+the expected policy. The consumer then revalidates exact arguments and Core context,
+issues and verifies a late signed dispatch permit, and commits one SQLite handoff.
+Its durable receipt must match before Core succeeds. SDK reporting and Plan completion
+follow Core success. This integration uses armoriq-sdk 0.6.10 and needs no public
+MCP server, tunnel or custom domain. MOCK and the existing proxy path are preserved.
 
-Checked 11 October 2026 against the official
-[Flow State page](https://armoriq.ai/hackathons/flow-state) and its linked
-[Luma registration](https://luma.com/tttqkw24). The event runs 10–17 October 2026,
-online; submissions close 17 October. The landing page uses UTC and says exact
-deadline hours belong in the official rules, but does not provide an exact hour
-or an itemized submission form in the retrieved content. Do not assume Auckland
-midnight. Luma describes solo participation or teams of up to four and host approval
-for registration. No registration request was submitted in this task.
+ArmorIQ Allow is a tool-level policy decision. Exact payload/permit integrity is
+verified locally; the project does not claim the remote service verified those fields.
+Unknown outcomes never automatically retry. Audit failure cannot repeat the write.
 
-The public page asks for a working project, short demo and explanation of ArmorIQ
-use and boundary behavior. Check the current organizer community for the final
-rules, precise deadline and submission destination before submitting.
+## Actual qualification evidence
 
-## Human completion checklist
+One expressly approved fresh synthetic **INC-24001** workflow ran through real
+Chrome clicks and real Ollama, then actual HTTPS ArmorIQ Allow. Action
+`4a6e877c-d60a-4651-b0eb-76058a6bf30e` reached Succeeded with exactly one durable
+record and matching receipt `6b42e4b8-4e10-43d8-a832-a5d98d68d1b0`.
+Core claim-to-terminal measured **1,259.307 ms**; remote enforcement **928.855 ms**.
+Exact request replay, refresh and real process restart preserved the same record
+and receipt. The complete consumer regression is **179 passed**, including
+**14 real Chrome tests**, in 369.90 seconds.
 
-1. Connect an already authenticated existing-organization browser for read-only
-   investigation of the retained Unknown Action's platform Plan and proxy audit.
-   Choose the researched SDK-only variant review or approve the prepared free
-   ngrok assigned-subdomain route; no self-owned domain/DNS change is needed.
-2. Confirm the actual policy's active status/deny rule and correct protected MCP
-   routing/credential configuration. SDK registration and a genuine deny already ran.
-3. Preserve Unknown without automatic reconciliation or retry. Successful real
-   execution, one durable matching receipt and dashboard correlation remain required
-   through a separately reviewed safe qualification plan after diagnosis.
-4. Record a 2–3 minute demo using [the script](demo-script.md), upload it,
-   and insert its real URL. Publish only sanitized evidence.
-5. Review current competition rules/deadline/submission form and registration status.
-6. Explicitly authorize commit/push when the qualified changes are ready, then
-   insert the actual commit link. Final submission requires separate authorization.
-   Publish only the audited source package; the old workspace ZIP contains keys.
+SDK audit POST and complete_plan returned HTTP 200, with matching Plan attribution.
+New audit ID: `654b662f-11af-4fae-b412-aa3bf4225af9`. Independent new platform
+readback is **BLOCKED**: SDK credentials receive 401 on the organization trace API
+and there is no connected authenticated dashboard browser. This limitation is explicit.
 
-**READY_TO_SUBMIT=NO · ACTUALLY_SUBMITTED=NO**
+Historical real canary denial is reused from Phase 2.2; no new canary ran. Six
+original ArmorIQ screenshots match their manifest and prove historical visible rows
+and the Phase 2.3 API request/Action/receipt correlation. They are not the new
+Phase 2.4 platform audit. The earlier proxy Unknown and INC-23001 state remain untouched.
+See the [complete A–J report](phase24-application-e2e-report.md) for IDs, timings,
+screenshots, security coverage, preservation and limitations.
+Setup and mode selection: [README](../README.md#start-locally).
+
+## Competition information
+
+Rechecked 12 October 2026: the [official Flow State page](https://armoriq.ai/hackathons/flow-state)
+accepts SDK integration without an MCP server, describes a working project, short
+demo and ArmorIQ boundary evidence, and lists submission closing **17 October 2026,
+UTC**. It says exact hours publish with official rules; a precise hour and formal
+submission destination were not verified. Do not assume Auckland midnight.
+[Luma](https://luma.com/tttqkw24) is event registration with host approval, not
+project submission evidence. Registration status and final rules still need human review.
+
+## Remaining human work
+
+1. In the existing authenticated organization, locate the new audit ID and verify
+   its new Action/receipt attribution. Capture read-only evidence; do not repeat the write.
+2. Record and upload a short demo using the [script](demo-script.md). Historical
+   screenshots and new application execution must be labelled separately.
+3. Confirm registration, official rules, exact UTC deadline and submission form.
+4. Separately authorize commit/push or source publication, then insert the actual
+   published revision and video URLs. Publish only audited source, never private state.
+5. Review the completed entry and separately authorize final submission.
+
+Video URL: NOT RECORDED. Public demo: NOT DEPLOYED (not needed for this spike).
+Phase 2.4 commit URL: NOT COMMITTED. Submission receipt: NONE. No links are invented.
+
+**PHASE24_APPLICATION_E2E=PASS · READY_TO_SUBMIT=NO · ACTUALLY_SUBMITTED=NO**

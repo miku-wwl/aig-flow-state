@@ -35,7 +35,8 @@
     </section>
   </div>
   <section class="card execution"><div class="section-title"><span class="number">03</span><div><h2>Authorize, then execute</h2><p>Human approval and trusted execution authorization are separate gates.</p></div></div>
-    <div class="buttons"><button id="admit" class="quiet" disabled>Admit approved Action</button><button id="authorize" class="quiet" disabled>Authorize Action</button><button id="execute" class="primary" disabled>Execute once</button><button id="try-unauthorized" class="danger" disabled>Test execution without authorization</button><button id="replay" class="quiet" disabled>Replay exact request</button></div>
+    <div class="buttons"><button id="admit" class="quiet" disabled>Admit approved Action</button><button id="authorize" class="quiet" disabled>Authorize Action</button><button id="prepare-sdk" class="quiet" disabled hidden>Prepare SDK-only execution</button><button id="execute" class="primary" disabled>Execute once</button><button id="try-unauthorized" class="danger" disabled>Test execution without authorization</button><button id="replay" class="quiet" disabled>Replay exact request</button></div>
+    <p id="sdk-stage-status" class="identifier" hidden></p><p id="sdk-policy-status" class="identifier" hidden></p><p id="sdk-audit-status" class="identifier" hidden></p>
     <div class="result-grid"><div><p class="eyebrow">BACKEND ACTION STATE</p><strong id="action-state">No Action admitted</strong><p id="action-id" class="identifier"></p></div><div><p class="eyebrow">DURABLE RECEIPT</p><strong id="receipt">—</strong><p id="action-message">Awaiting your review.</p></div></div>
     <details><summary>Backend Action snapshot</summary><pre id="action-json">No Action yet.</pre></details>
   </section>
