@@ -7,9 +7,16 @@ from tests.conftest import approved_action, command_headers, fault_settings
 
 def test_health_status_security(client, state):
     assert client.get("/api/health").status_code == 200
+    assert client.get("/api/health").json()["product"] == "Aegis Relay"
+    metadata = client.app.openapi()["info"]
+    assert metadata["title"] == "Aegis Relay"
+    assert metadata["description"] == "A permissioned AI agent for secure incident handoffs."
     assert client.get("/api/status").json()["provider"]["mode"] == "fixture"
     html = client.get("/")
-    assert "SafeOps Agent" in html.text and "Simulated policy enforcement" in html.text
+    assert "<title>Aegis Relay</title>" in html.text and "<h1>Aegis Relay</h1>" in html.text
+    assert "Trust the intent. Govern the action." in html.text
+    assert "A permissioned AI agent for secure incident handoffs." in html.text
+    assert "Simulated policy enforcement" in html.text
     assert (state / "capability").read_text("ascii") not in html.text
     assert "frame-ancestors 'none'" in html.headers["content-security-policy"]
     assert client.get("/api/handoffs", headers={"Authorization": "Bearer bad"}).status_code == 401

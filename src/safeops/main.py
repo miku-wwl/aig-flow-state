@@ -36,7 +36,14 @@ def create_app(settings, *, provider=None, enforcement=None):
             finally:
                 app.router.routes.remove(mounted)
 
-    app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(
+        title="Aegis Relay",
+        description="A permissioned AI agent for secure incident handoffs.",
+        lifespan=lifespan,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
     app.add_middleware(
         TrustedHostMiddleware,
         allowed_hosts=["127.0.0.1", "localhost", "[::1]"],
@@ -101,7 +108,10 @@ def create_app(settings, *, provider=None, enforcement=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="SafeOps Agent local single-operator demo")
+    parser = argparse.ArgumentParser(
+        description="Aegis Relay — A permissioned AI agent for secure incident handoffs.",
+        epilog="Trust the intent. Govern the action.",
+    )
     commands = parser.add_subparsers(dest="command", required=True)
     init = commands.add_parser("init", help="Exclusively provision a NEW private state directory")
     init.add_argument("--state", type=Path, default=Path(".runtime/local"))

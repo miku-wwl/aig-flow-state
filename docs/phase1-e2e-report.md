@@ -1,5 +1,9 @@
 # SafeOps Agent — Phase 1 execution report
 
+> Historical report: previously developed as SafeOps Agent; rebranded as Aegis Relay.
+> The results, commands and evidence below describe the original Phase 1 verification
+> and have not been rewritten as rebranding test results.
+
 Verification date: **2026-10-11, Pacific/Auckland**. This report describes executed local
 tests. ArmorIQ enforcement remains a deterministic **MOCK** in every scenario, including
 the successful real-Ollama workflow. No live ArmorIQ account or sponsor API was used.

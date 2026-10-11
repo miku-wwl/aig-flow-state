@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -46,8 +47,23 @@ def unlock(page, server):
     expect(page.locator("#capability-status")).to_contain_text("Workspace unlocked")
 
 
+def assert_branding(page):
+    expect(page).to_have_title("Aegis Relay")
+    expect(page.locator("h1")).to_have_text("Aegis Relay")
+    expect(page.get_by_role("link", name="Aegis Relay home")).to_be_visible()
+    expect(page.locator(".hero .eyebrow")).to_have_text("Trust the intent. Govern the action.")
+    expect(page.locator("meta[name='description']")).to_have_attribute(
+        "content", "A permissioned AI agent for secure incident handoffs."
+    )
+    expect(
+        page.get_by_text("A permissioned AI agent for secure incident handoffs.")
+    ).to_be_visible()
+    expect(page.locator("body")).not_to_contain_text(re.compile(r"safe[\s_-]*ops\s+agent", re.I))
+
+
 def generate(page, server):
     page.goto(server.url)
+    assert_branding(page)
     expect(page.locator("#provider-mode")).to_contain_text("fixture")
     unlock(page, server)
     page.locator("#intent").fill(
@@ -95,6 +111,7 @@ def test_happy_replay_refresh_and_mock_denial(page, server):
         assert db.execute("SELECT count(*) FROM handoffs").fetchone()[0] == 1
         assert db.execute("SELECT receipt_reference FROM handoffs").fetchone()[0] == receipt
     screenshot(page, "02-successful-action-receipt.png")
+    assert_branding(page)
     page.locator("#replay").click()
     expect(page.locator("#notice")).to_contain_text("receipt is unchanged")
     assert server.get("/api/handoffs")["records"] == records
@@ -102,6 +119,7 @@ def test_happy_replay_refresh_and_mock_denial(page, server):
     expect(page.locator("#policy-result")).to_contain_text("PolicyDenied")
     expect(page.locator("#policy-result")).to_contain_text('"core_action_created": false')
     screenshot(page, "03-simulated-policy-denial.png")
+    assert_branding(page)
     page.reload()
     expect(page.locator("#generate")).to_be_disabled()
     # Capability is intentionally not persisted; reload it, then refresh performs only reads.
@@ -111,6 +129,7 @@ def test_happy_replay_refresh_and_mock_denial(page, server):
     expect(page.locator(".record")).to_have_count(1)
     assert server.get("/api/handoffs")["records"] == records
     screenshot(page, "04-persisted-after-refresh.png")
+    assert_branding(page)
     save_evidence(
         "offline-browser",
         {
@@ -150,6 +169,7 @@ def test_provider_failure_rendered(page, state, fault, code):
     try:
         server.start()
         page.goto(server.url)
+        assert_branding(page)
         unlock(page, server)
         page.locator("#generate").click()
         expect(page.locator("#run-state")).to_have_text("PlanRejected")

@@ -1,4 +1,33 @@
-# Development and reproduction
+# Aegis Relay — Development and reproduction
+
+**Trust the intent. Govern the action.** A permissioned AI agent for secure incident
+handoffs. The current stage is Phase 1 Local E2E for Flow State — AI Agent & MCP
+Hackathon, organized by ArmorIQ. Enforcement remains a local ArmorIQ simulation;
+real SDK and policy enforcement are Phase 2 work.
+
+## Branding and compatibility
+
+Aegis Relay is the product name. Stable programmatic identifiers retain their original
+names so existing installations, configuration, saved Runs and browser restoration work:
+
+| Preserved identifier | Compatibility reason |
+| --- | --- |
+| `safeops-agent`, `safeops`, `safeops.main:main`, `src/safeops` | Installed distribution, CLI, imports and package layout |
+| `SAFEOPS_STATE`, `SAFEOPS_PROVIDER`, `SAFEOPS_OLLAMA_URL`, `SAFEOPS_MODEL`, `SAFEOPS_MODEL_TIMEOUT` | Existing environment configuration |
+| `OllamaSafeOpsProvider`, `safeops_plan`, `safeops-static` | Internal class, model schema name and static route name |
+| `safeops-armoriq`, `safeops-v1` | Persisted ToolBinding adapter and revision |
+| `safeops-local-operator`, `safeops-policy-v1` | Persisted subject and authorization policy revision |
+| `safeops-run-` | Scope-qualified browser restoration key; contains only a Run UUID |
+| `create_incident_handoff`, `incident-desk`, `/api/*`, JSON fields and SQLite tables | Existing tool, target, API and data contracts |
+
+Execution scopes, store IDs, effect keys, capabilities and existing database contents
+are preserved. Rebranding requires no migration or reprovisioning. Agentic Intent Gate
+v0.1.0 remains pinned to `fd742b783058a53400c465b4ab59c6e80715895a`.
+
+Restart an existing server after updating source to refresh its in-memory backend
+metadata. Keep its existing state directory; do not rerun initialization or reset data.
+
+## Local verification
 
 Python is constrained to 3.13. `uv.lock` pins the Git release commit and transitive
 dependencies. The runtime must be installed normally; no `PYTHONPATH`/editable core

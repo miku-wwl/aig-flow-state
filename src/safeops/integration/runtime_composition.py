@@ -82,7 +82,7 @@ def composition(settings, *, provider=None, enforcement=None, provision_gate=Fal
         raise ValueError("Unsupported trusted identity; no automatic provisioning or migration")
     binding = ToolBinding(**identity["binding"])
     if binding != binding_for(binding.execution_scope):
-        raise ValueError("Trusted SafeOps binding mismatch")
+        raise ValueError("Trusted Aegis Relay binding mismatch")
     store = HandoffStore(directory / "effects.sqlite3", binding, identity["store_id"])
     store.validate()
     provider = provider or (

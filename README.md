@@ -1,6 +1,11 @@
-# SafeOps Agent
+# Aegis Relay
 
-**Permissioned Incident Handoff Assistant** for Flow State — AI Agent & MCP Hackathon.
+**Trust the intent. Govern the action.**
+
+A permissioned AI agent for secure incident handoffs.
+
+Built for **Flow State — AI Agent & MCP Hackathon**, organized by **ArmorIQ**.
+Current stage: **Phase 1 Local E2E**, with simulated ArmorIQ enforcement.
 
 Phase 1 is a local, single-operator application for one workflow: creating a synthetic
 incident handoff. A real Ollama model proposes a bounded Plan. You review the persisted
@@ -22,6 +27,9 @@ cloud deployment or paid APIs are involved.
 
 Requires Python 3.13, [uv](https://docs.astral.sh/uv/), authenticated Git if the runtime
 repository is private, and a browser. Run in this repository with PowerShell:
+
+The stable `safeops` CLI and Python package names are retained for compatibility;
+see [the preserved identifiers](docs/development.md#branding-and-compatibility).
 
 ```powershell
 uv sync --locked
@@ -67,7 +75,7 @@ an installed `phi4-mini` tag; `phi4-mini:latest` was present on this host. Confi
 `SAFEOPS_MODEL` when selecting another installed phi4-mini tag. The local
 OpenAI-compatible `/v1/chat/completions` endpoint receives a structured schema and one
 request. Raw output is validated by the core, without extraction, repair, retries or
-cloud/fixture fallback. Models are never downloaded by SafeOps.
+cloud/fixture fallback. Models are never downloaded by Aegis Relay.
 
 The configurable provider timeout, `SAFEOPS_MODEL_TIMEOUT`, must be between 0 and 28
 seconds because the pinned core HTTP planning budget is 30 seconds with a reserve.
@@ -121,7 +129,7 @@ Action/effect identity, not every repeated natural-language request.
 
 After a post-commit acknowledgement failure, the Action is `Unknown` even if the
 business viewer shows a record. It has no confirmed success receipt. Refresh/restart
-never redispatches it. SafeOps exposes no automatic reconciliation or retry for Unknown.
+never redispatches it. Aegis Relay exposes no automatic reconciliation or retry for Unknown.
 
 Phase 2 must replace the consumer enforcement boundary with a reviewed SDK adapter,
 configure an ArmorIQ account and policies, determine registered tool transport and

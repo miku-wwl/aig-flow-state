@@ -28,7 +28,7 @@ def consumer_routes(app):
 
     @router.get("/api/health")
     def health():
-        return {"status": "ok", "product": "SafeOps Agent", "phase": 1}
+        return {"status": "ok", "product": "Aegis Relay", "phase": 1}
 
     @router.get("/api/status")
     def status():

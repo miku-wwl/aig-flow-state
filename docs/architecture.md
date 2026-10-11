@@ -1,9 +1,13 @@
-# SafeOps Phase 1 architecture
+# Aegis Relay — Phase 1 architecture
+
+A permissioned AI agent for secure incident handoffs. **Trust the intent. Govern the action.**
+This is Phase 1 Local E2E for Flow State — AI Agent & MCP Hackathon, organized by
+ArmorIQ. Policy enforcement is simulated; real ArmorIQ SDK integration belongs to Phase 2.
 
 ```mermaid
 flowchart TD
     UI[Local browser: capability held in memory] --> HTTP[FastAPI: loopback and same origin]
-    HTTP --> Provider[SafeOps ModelProvider: Ollama or explicit fixture]
+    HTTP --> Provider[Aegis Relay ModelProvider: Ollama or explicit fixture]
     Provider --> Core[Installed Agentic Intent Gate v0.1.0]
     Core --> Run[(Core SQLite: Runs and exact approval binding)]
     Run --> Approve[Human approval]
@@ -84,7 +88,7 @@ The core's supported proven no-effect vocabulary is limited to `INPUT_REJECTED`,
 `INPUT_REJECTED`/`Failed` and retains the specific mock policy result in business audit
 evidence. Service-unavailable, timeout, invocation ambiguity and post-commit acknowledgement
 loss are conservative `Unknown` outcomes. A committed record can coexist with an
-Unknown Action without a confirmed success receipt. SafeOps never retries or reconciles
+Unknown Action without a confirmed success receipt. Aegis Relay never retries or reconciles
 it automatically. Exact core command replay only reads its durable result.
 
 ## ArmorIQ handoff boundary

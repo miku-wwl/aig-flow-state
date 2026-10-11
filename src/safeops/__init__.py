@@ -1,1 +1,1 @@
-"""SafeOps consumer; the installed Agentic Intent Gate owns control-plane state."""
+"""Aegis Relay consumer; the installed Agentic Intent Gate owns control-plane state."""

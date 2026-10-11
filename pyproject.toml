@@ -1,7 +1,7 @@
 [project]
 name = "safeops-agent"
 version = "0.1.0"
-description = "Permissioned Incident Handoff Assistant — Phase 1 local demo"
+description = "Aegis Relay — A permissioned AI agent for secure incident handoffs."
 requires-python = ">=3.13,<3.14"
 dependencies = [
   "agentic-intent-gate @ git+https://github.com/miku-wwl/agentic-intent-gate.git@fd742b783058a53400c465b4ab59c6e80715895a",
