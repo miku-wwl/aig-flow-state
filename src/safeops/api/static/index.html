@@ -1,49 +1,195 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Aegis Relay</title>
-  <meta name="description" content="A permissioned AI agent for secure incident handoffs.">
-  <link rel="stylesheet" href="/static/styles.css"><script defer src="/static/app.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10151e">
+  <title>Aegis Relay — Agent Execution Console</title>
+  <meta name="description" content="Aegis Relay is a permissioned AI agent execution console for governed incident handoffs.">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script defer src="/static/app.js"></script>
 </head>
 <body>
-<header><a class="brand" href="/" aria-label="Aegis Relay home">A<span>Aegis Relay</span></a><span id="mode-chip" class="chip">LOCAL / MOCK</span></header>
-<main>
-  <section class="hero"><div><p class="eyebrow">Trust the intent. Govern the action.</p>
-    <h1>Aegis Relay</h1>
-    <p>A permissioned AI agent for secure incident handoffs.</p>
-    <p>Turn incident context into a reviewed plan. You control every step before a handoff is written.</p></div>
-    <aside class="mode-card"><span class="dot"></span><strong id="provider-mode">Connecting…</strong>
-      <p id="enforcement-mode">Simulated policy enforcement — Phase 1 offline mode</p><small id="integration-status">Local single-operator demo · Synthetic incidents only</small></aside>
-  </section>
-  <section class="access card"><div><strong>Operator capability</strong><p id="capability-status">Load your private capability file to open this workspace. It stays in browser memory.</p></div>
-    <label class="file-button">Load capability<input id="capability-file" type="file" aria-label="Load private capability file"></label>
-    <button id="lock" class="quiet">Lock workspace</button>
-  </section>
-  <div id="error" role="alert" hidden></div><div id="notice" role="status" hidden></div>
-  <div class="workspace">
-    <section class="card request"><div class="section-title"><span class="number">01</span><div><h2>Describe the incident</h2><p>One handoff, one bounded business action.</p></div></div>
-      <label for="intent">Incident context</label><textarea id="intent" maxlength="4096" rows="7">Create an incident handoff for INC-1042. The checkout API is returning errors. The team should investigate the upstream dependency and preserve investigation notes.</textarea>
-      <button id="generate" class="primary">Generate Plan &amp; save Run</button><small class="hint">No approval or execution happens here.</small>
-      <hr><label for="restore-id">Open a saved Run</label><div class="inline"><input id="restore-id" placeholder="Run UUID" autocomplete="off"><button id="restore" class="quiet">Open</button></div>
+  <header class="app-header">
+    <a class="brand" href="/" aria-label="Aegis Relay home">
+      <span class="brand-mark" aria-hidden="true">A</span>
+      <span class="brand-copy"><strong>Aegis Relay</strong><small>Agent Execution Console</small></span>
+    </a>
+    <p class="header-tagline">Trust the intent. Govern the action.</p>
+    <div class="header-status" aria-label="Runtime status">
+      <div class="status-cell mode-cell">
+        <span class="status-label">ENFORCEMENT</span>
+        <strong id="mode-chip" class="chip">LOCAL / MOCK</strong>
+        <small id="enforcement-mode">Connecting to backend…</small>
+      </div>
+      <div class="status-cell">
+        <span class="status-label">PLAN PROVIDER</span>
+        <strong id="provider-mode" class="status-value">Connecting…</strong>
+      </div>
+      <div class="status-cell integration-cell">
+        <span class="status-label">ARMORIQ</span>
+        <strong id="integration-status" class="status-value">Checking backend status…</strong>
+      </div>
+    </div>
+  </header>
+
+  <main class="console">
+    <section class="page-heading">
+      <div>
+        <p class="eyebrow">SECURE INCIDENT HANDOFF</p>
+        <h1>Agent Execution Console</h1>
+        <p class="page-subtitle">Review the proposal. Record human approval. Authorize and execute as separate steps.</p>
+      </div>
+      <div class="scope-card">
+        <span class="status-label">EXECUTION SCOPE</span>
+        <strong>Single bounded handoff</strong>
+        <small>One trusted SIDE_EFFECT tool</small>
+      </div>
     </section>
-    <section class="card review"><div class="section-title"><span class="number">02</span><div><h2>Review the exact Plan</h2><p>Approval belongs to this persisted Plan and version.</p></div></div>
-      <div class="state-line"><span id="run-state" class="badge">No Run selected</span><span id="run-version"></span></div>
-      <p id="validation">Generate a Plan to see validation and risk.</p><dl id="plan-fields"></dl>
-      <details><summary>Full structured Plan</summary><pre id="plan-json">No Plan yet.</pre></details>
-      <p id="run-id" class="identifier"></p><div class="buttons"><button id="approve" class="primary" disabled>Approve exact Plan</button><button id="reject" class="danger" disabled>Reject Plan</button></div>
+
+    <section class="workflow-panel" aria-labelledby="workflow-title">
+      <div class="panel-heading compact-heading">
+        <div><p class="eyebrow">RUN PROGRESS</p><h2 id="workflow-title">Governed execution path</h2></div>
+        <span class="read-only-note">Backend state · read only</span>
+      </div>
+      <ol class="workflow-steps" aria-label="Incident to receipt workflow">
+        <li data-step="incident" data-state="current" aria-current="step"><span class="step-index">01</span><span class="step-name">Incident</span><small class="step-state">Current</small></li>
+        <li data-step="plan" data-state="pending"><span class="step-index">02</span><span class="step-name">Plan</span><small class="step-state">Pending</small></li>
+        <li data-step="approval" data-state="pending"><span class="step-index">03</span><span class="step-name">Approval</span><small class="step-state">Pending</small></li>
+        <li data-step="admission" data-state="pending"><span class="step-index">04</span><span class="step-name">Admission</span><small class="step-state">Pending</small></li>
+        <li data-step="authorization" data-state="pending"><span class="step-index">05</span><span class="step-name">Authorization</span><small class="step-state">Pending</small></li>
+        <li data-step="preparation" data-state="pending"><span class="step-index">06</span><span class="step-name">SDK Prepare</span><small class="step-state">Pending</small></li>
+        <li data-step="execution" data-state="pending"><span class="step-index">07</span><span class="step-name">Execution</span><small class="step-state">Pending</small></li>
+        <li data-step="receipt" data-state="pending"><span class="step-index">08</span><span class="step-name">Receipt</span><small class="step-state">Pending</small></li>
+      </ol>
     </section>
-  </div>
-  <section class="card execution"><div class="section-title"><span class="number">03</span><div><h2>Authorize, then execute</h2><p>Human approval and trusted execution authorization are separate gates.</p></div></div>
-    <div class="buttons"><button id="admit" class="quiet" disabled>Admit approved Action</button><button id="authorize" class="quiet" disabled>Authorize Action</button><button id="prepare-sdk" class="quiet" disabled hidden>Prepare SDK-only execution</button><button id="execute" class="primary" disabled>Execute once</button><button id="try-unauthorized" class="danger" disabled>Test execution without authorization</button><button id="replay" class="quiet" disabled>Replay exact request</button></div>
-    <p id="sdk-stage-status" class="identifier" hidden></p><p id="sdk-policy-status" class="identifier" hidden></p><p id="sdk-audit-status" class="identifier" hidden></p>
-    <div class="result-grid"><div><p class="eyebrow">BACKEND ACTION STATE</p><strong id="action-state">No Action admitted</strong><p id="action-id" class="identifier"></p></div><div><p class="eyebrow">DURABLE RECEIPT</p><strong id="receipt">—</strong><p id="action-message">Awaiting your review.</p></div></div>
-    <details><summary>Backend Action snapshot</summary><pre id="action-json">No Action yet.</pre></details>
-  </section>
-  <div class="workspace bottom">
-    <section class="card records"><div class="section-title"><span class="number">04</span><div><h2>Persisted handoffs</h2><p>Read from the separate business SQLite store.</p></div></div><button id="refresh-records" class="quiet">Refresh records</button><div id="records"><p class="empty">Load capability to view records.</p></div></section>
-    <section class="card policy"><p id="policy-lab-label" class="eyebrow">MOCK POLICY LAB</p><h2>See a safe denial</h2><p id="policy-lab-description">Request purge_incident_history against a deterministic local deny policy.</p><p>No destructive executor exists. This policy test creates no core Action.</p><button id="policy-test" class="danger">Test simulated forbidden operation</button><pre id="policy-result">No policy test yet.</pre><p id="live-evidence" class="identifier"></p></section>
-  </div>
-  <footer id="mode-footer">Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · Mock ArmorIQ mode</footer>
-</main>
-</body></html>
+
+    <section class="access-bar" aria-label="Workspace access">
+      <div class="access-state">
+        <span id="workspace-state" class="workspace-indicator" data-unlocked="false">WORKSPACE LOCKED</span>
+        <div><strong>Operator capability</strong><p id="capability-status">Load your private capability file to unlock this workspace. It stays in browser memory.</p></div>
+      </div>
+      <div class="access-actions">
+        <label class="file-button">Load capability<input id="capability-file" type="file" aria-label="Load private capability file"></label>
+        <button id="lock" class="button quiet">Lock workspace</button>
+      </div>
+    </section>
+
+    <div id="error" class="feedback error-feedback" role="alert" hidden></div>
+    <div id="notice" class="feedback notice-feedback" role="status" aria-live="polite" hidden></div>
+
+    <section class="workspace-grid" aria-label="Run workspace">
+      <div class="left-column">
+        <section class="card incident-card" aria-labelledby="incident-title">
+          <div class="card-heading">
+            <div class="heading-mark" aria-hidden="true">01</div>
+            <div><p class="eyebrow">INCIDENT INPUT</p><h2 id="incident-title">Describe the incident</h2><p class="card-subtitle">One request. One bounded business action.</p></div>
+          </div>
+          <label for="intent">Incident context</label>
+          <textarea id="intent" maxlength="4096" rows="4">Create an incident handoff for INC-1042. The checkout API is returning errors. The team should investigate the upstream dependency and preserve investigation notes.</textarea>
+          <div class="generate-row"><button id="generate" class="button primary">Generate Plan &amp; save Run</button><span class="helper-text">Creates a validated Plan and persistent Run only.</span></div>
+          <div class="restore-row">
+            <div><label for="restore-id">Open a saved Run</label><p>Restores persisted state using read-only requests.</p></div>
+            <div class="inline"><input id="restore-id" placeholder="Run UUID" autocomplete="off" aria-label="Saved Run UUID"><button id="restore" class="button quiet">Open Run</button></div>
+          </div>
+        </section>
+
+        <section class="card plan-card" aria-labelledby="plan-title">
+          <div class="card-heading">
+            <div class="heading-mark" aria-hidden="true">02</div>
+            <div><p class="eyebrow">MODEL PROPOSAL · RUNTIME VALIDATED</p><h2 id="plan-title">Review the exact Plan</h2><p class="card-subtitle">Approval is bound to this persisted Plan and version.</p></div>
+          </div>
+          <div class="plan-state-row"><span id="run-state" class="badge">No Run selected</span><span id="run-version" class="version-label"></span></div>
+          <p id="validation" class="validation-copy" role="status" aria-live="polite">Generate a Plan to see validation and risk.</p>
+          <div id="run-identifier-row" class="identifier-row" hidden><span id="run-id" class="identifier">No Run selected</span><button id="copy-run" class="button copy-button" type="button" disabled aria-label="Copy full Run ID">Copy ID</button></div>
+          <div class="gate-actions approval-actions">
+            <button id="approve" class="button primary" disabled>Approve exact Plan</button>
+            <button id="reject" class="button danger" disabled>Reject Plan</button>
+          </div>
+          <p class="gate-note"><span class="gate-symbol" aria-hidden="true">A</span> Approval records your decision. It does not admit or execute an Action.</p>
+          <dl id="plan-fields" class="plan-fields"></dl>
+          <details id="plan-json-details" class="technical-details" hidden><summary>Full structured Plan JSON</summary><pre id="plan-json">No Plan yet.</pre></details>
+        </section>
+      </div>
+
+      <section class="card control-card" aria-labelledby="control-title">
+        <div class="card-heading">
+          <div class="heading-mark control-mark" aria-hidden="true">03</div>
+          <div><p class="eyebrow">HUMAN CONTROL</p><h2 id="control-title">Authorize, then execute</h2><p class="card-subtitle">Admission, authorization, SDK preparation, and execution are separate gates.</p></div>
+        </div>
+
+        <div class="control-flow">
+          <section class="control-step" aria-labelledby="admission-title">
+            <div class="control-step-heading"><span class="control-number">1</span><div><h3 id="admission-title">Action Admission</h3><p>Materialize the approved Plan as a durable Action.</p></div></div>
+            <button id="admit" class="button quiet" disabled>Admit approved Action</button>
+          </section>
+          <section class="control-step" aria-labelledby="authorization-title">
+            <div class="control-step-heading"><span class="control-number">2</span><div><h3 id="authorization-title">Independent Authorization</h3><p>Grant execution permission for the admitted Action.</p></div></div>
+            <button id="authorize" class="button quiet" disabled>Authorize Action</button>
+          </section>
+          <section id="sdk-controls" class="control-step sdk-control-step">
+            <div class="control-step-heading"><span class="control-number">3</span><div><h3>SDK-only preparation</h3><p id="sdk-control-description">Mode-specific preparation status loads from the backend.</p></div></div>
+            <button id="prepare-sdk" class="button quiet" disabled hidden>Prepare SDK-only execution</button>
+            <p id="sdk-stage-status" class="evidence-detail" hidden></p>
+            <p id="sdk-policy-status" class="evidence-detail" hidden></p>
+            <p id="sdk-audit-status" class="evidence-detail" hidden></p>
+          </section>
+        </div>
+
+        <div class="execute-row">
+          <div><p class="eyebrow">BOUNDED OPERATOR ACTION</p><p>Execution is never triggered by approval, refresh, or preparation.</p></div>
+          <button id="execute" class="button execute-button" disabled>Execute once</button>
+        </div>
+        <div class="secondary-actions">
+          <button id="try-unauthorized" class="button danger" disabled>Verify unauthorized execution is blocked</button>
+          <button id="replay" class="button quiet" disabled>Replay exact request</button>
+        </div>
+
+        <div class="action-result" aria-live="polite">
+          <div class="result-heading"><div><p class="eyebrow">CORE ACTION STATE</p><strong id="action-state" class="action-state-value">No Action admitted</strong><p id="action-message" class="action-message">Awaiting your review.</p></div><span class="receipt-glyph" aria-hidden="true">R</span></div>
+          <div class="result-meta">
+            <div><span class="status-label">ACTION</span><div class="identifier-row compact-identifier"><span id="action-id" class="identifier">—</span><button id="copy-action" class="button copy-button" type="button" disabled aria-label="Copy full Action ID">Copy</button></div></div>
+            <div><span class="status-label">DURABLE RECEIPT</span><div class="receipt-row"><strong id="receipt">—</strong><button id="copy-receipt" class="button copy-button" type="button" disabled aria-label="Copy full receipt reference">Copy</button></div></div>
+          </div>
+          <section id="success-summary" class="success-summary" hidden aria-labelledby="success-title">
+            <div class="success-title-row"><span class="success-check" aria-hidden="true">✓</span><div><p class="eyebrow">CONFIRMED BY BACKEND</p><h3 id="success-title">Core Action: Succeeded</h3></div></div>
+            <div class="success-facts">
+              <div><span class="status-label">INCIDENT</span><strong id="success-incident">Not available</strong></div>
+              <div><span class="status-label">TRUSTED TOOL</span><strong id="success-tool">Not available</strong></div>
+              <div><span class="status-label">BUSINESS HANDOFF</span><strong id="success-record">Checking persisted record…</strong></div>
+              <div><span class="status-label">ARMORIQ OUTCOME</span><strong id="success-policy">Not available in this path</strong></div>
+            </div>
+            <div class="receipt-callout"><span>Durable receipt reference</span><strong id="success-receipt">Not available</strong><button id="copy-success-receipt" class="button copy-button" type="button" disabled>Copy receipt</button></div>
+          </section>
+          <details class="technical-details"><summary>Full identifiers and backend Action snapshot</summary><p id="full-identifiers" class="identifier"></p><pre id="action-json">No Action yet.</pre></details>
+        </div>
+      </section>
+    </section>
+
+    <section class="card timeline-card" aria-labelledby="timeline-title">
+      <div class="panel-heading">
+        <div><p class="eyebrow">PERSISTED EVIDENCE</p><h2 id="timeline-title">Execution timeline</h2><p class="card-subtitle">Known backend events appear in order. Missing detail stays explicit.</p></div>
+        <span class="read-only-note">Read-only view</span>
+      </div>
+      <ol id="timeline" class="evidence-timeline" aria-live="polite"></ol>
+    </section>
+
+    <section class="bottom-grid" aria-label="Business and policy evidence">
+      <section class="card records-card" aria-labelledby="records-title">
+        <div class="panel-heading records-heading"><div><p class="eyebrow">BUSINESS STORE</p><h2 id="records-title">Persisted handoffs</h2><p class="card-subtitle">Read-only records from the separate business SQLite store.</p></div><button id="refresh-records" class="button quiet">Refresh records</button></div>
+        <div id="records"><p class="empty">Load capability to view records.</p></div>
+      </section>
+      <section class="card policy-card" aria-labelledby="policy-title">
+        <div class="panel-heading"><div><p id="policy-lab-label" class="eyebrow">MOCK POLICY LAB</p><h2 id="policy-title">Policy boundary evidence</h2></div></div>
+        <div id="policy-history-banner" class="history-banner"><strong id="policy-origin-label">POLICY PROVENANCE</strong><p id="policy-lab-description">Policy evidence is shown with its backend-reported source.</p></div>
+        <p class="policy-boundary-note">Historical denial is separate from the current Run. A policy check does not create a Core Action or execute a business operation.</p>
+        <button id="policy-test" class="button danger">Test simulated forbidden operation</button>
+        <div id="policy-result" class="policy-result" role="status" aria-live="polite">No policy evidence loaded.</div>
+        <p id="live-evidence" class="identifier live-evidence"></p>
+      </section>
+    </section>
+
+    <footer id="mode-footer">Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · Connecting…</footer>
+  </main>
+</body>
+</html>

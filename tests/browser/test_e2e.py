@@ -48,16 +48,16 @@ def unlock(page, server):
 
 
 def assert_branding(page):
-    expect(page).to_have_title("Aegis Relay")
-    expect(page.locator("h1")).to_have_text("Aegis Relay")
+    expect(page).to_have_title("Aegis Relay — Agent Execution Console")
+    expect(page.locator("h1")).to_have_text("Agent Execution Console")
     expect(page.get_by_role("link", name="Aegis Relay home")).to_be_visible()
-    expect(page.locator(".hero .eyebrow")).to_have_text("Trust the intent. Govern the action.")
+    expect(page.locator(".header-tagline")).to_have_text("Trust the intent. Govern the action.")
     expect(page.locator("meta[name='description']")).to_have_attribute(
-        "content", "A permissioned AI agent for secure incident handoffs."
+        "content",
+        "Aegis Relay is a permissioned AI agent execution console for governed incident handoffs.",
     )
-    expect(
-        page.get_by_text("A permissioned AI agent for secure incident handoffs.")
-    ).to_be_visible()
+    expect(page.locator("#workflow-title")).to_have_text("Governed execution path")
+    expect(page.locator("#timeline-title")).to_have_text("Execution timeline")
     expect(page.locator("body")).not_to_contain_text(re.compile(r"safe[\s_-]*ops\s+agent", re.I))
 
 
@@ -65,6 +65,7 @@ def generate(page, server):
     page.goto(server.url)
     assert_branding(page)
     expect(page.locator("#provider-mode")).to_contain_text("fixture")
+    expect(page.locator("#workspace-state")).to_have_text("WORKSPACE LOCKED")
     unlock(page, server)
     page.locator("#intent").fill(
         "Create an incident handoff for INC-1042. The checkout API is returning errors. "
@@ -73,21 +74,32 @@ def generate(page, server):
     page.locator("#generate").click()
     expect(page.locator("#run-state")).to_have_text("AwaitingApproval")
     expect(page.locator("#validation")).to_contain_text("SIDE_EFFECT")
+    expect(page.locator('[data-step="plan"]')).to_have_attribute("data-state", "complete")
+    expect(page.locator('[data-step="approval"]')).to_have_attribute("data-state", "current")
 
 
 def admit(page):
     page.locator("#approve").click()
     expect(page.locator("#run-state")).to_have_text("Approved")
+    expect(page.locator('[data-step="approval"]')).to_have_attribute("data-state", "complete")
     page.locator("#admit").click()
     expect(page.locator("#action-state")).to_have_text("Pending")
+    expect(page.locator('[data-step="admission"]')).to_have_attribute("data-state", "complete")
+    expect(page.locator('[data-step="authorization"]')).to_have_attribute("data-state", "current")
 
 
 def execute(page):
     page.locator("#authorize").click()
     expect(page.locator("#action-state")).to_have_text("Authorized")
+    expect(page.locator('[data-step="authorization"]')).to_have_attribute("data-state", "complete")
+    expect(page.locator('[data-step="execution"]')).to_have_attribute("data-state", "current")
     page.locator("#execute").click()
     expect(page.locator("#action-state")).to_have_text("Succeeded")
     expect(page.locator(".record")).to_have_count(1)
+    expect(page.locator("#success-summary")).to_be_visible()
+    expect(page.locator("#success-record")).to_contain_text("Matched persisted handoff")
+    expect(page.locator('[data-step="execution"]')).to_have_attribute("data-state", "complete")
+    expect(page.locator('[data-step="receipt"]')).to_have_attribute("data-state", "complete")
 
 
 def screenshot(page, name):
@@ -101,7 +113,7 @@ def test_happy_replay_refresh_and_mock_denial(page, server):
     screenshot(page, "01-plan-awaiting-approval.png")
     admit(page)
     execute(page)
-    receipt = page.locator("#receipt").inner_text()
+    receipt = page.locator("#receipt").get_attribute("title")
     run_id = page.locator("#restore-id").input_value()
     action = json.loads(page.locator("#action-json").text_content())
     records = server.get("/api/handoffs")["records"]
@@ -118,6 +130,7 @@ def test_happy_replay_refresh_and_mock_denial(page, server):
     page.locator("#policy-test").click()
     expect(page.locator("#policy-result")).to_contain_text("PolicyDenied")
     expect(page.locator("#policy-result")).to_contain_text('"core_action_created": false')
+    expect(page.locator("#policy-origin-label")).to_have_text("LOCAL MOCK POLICY DENIAL · NOT ARMORIQ")
     screenshot(page, "03-simulated-policy-denial.png")
     assert_branding(page)
     page.reload()
@@ -125,7 +138,7 @@ def test_happy_replay_refresh_and_mock_denial(page, server):
     # Capability is intentionally not persisted; reload it, then refresh performs only reads.
     unlock(page, server)
     expect(page.locator("#action-state")).to_have_text("Succeeded")
-    expect(page.locator("#receipt")).to_have_text(receipt)
+    expect(page.locator("#receipt")).to_have_attribute("title", receipt)
     expect(page.locator(".record")).to_have_count(1)
     assert server.get("/api/handoffs")["records"] == records
     screenshot(page, "04-persisted-after-refresh.png")

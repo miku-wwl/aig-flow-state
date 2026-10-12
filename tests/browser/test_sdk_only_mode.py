@@ -45,9 +45,9 @@ def test_sdk_only_clicks_and_persisted_restore(state, fault, terminal, audit):
             expect(page.locator("#action-state")).to_have_text(terminal)
             expect(page.locator("#sdk-audit-status")).to_contain_text(audit)
             expected_policy = (
-                "Explicit Allow NOT_CONFIRMED" if fault == "deny" else "Explicit Allow CONFIRMED"
+                "Explicit Allow NOT CONFIRMED" if fault == "deny" else "Explicit Allow CONFIRMED"
             )
-            expect(page.locator("#sdk-policy-status")).to_contain_text("OFFLINE test")
+            expect(page.locator("#sdk-policy-status")).to_contain_text("OFFLINE SDK fixture")
             expect(page.locator("#sdk-policy-status")).to_contain_text(expected_policy)
             action = json.loads(page.locator("#action-json").text_content())
             records = server.get("/api/handoffs")["records"]
@@ -77,5 +77,46 @@ def test_sdk_only_clicks_and_persisted_restore(state, fault, terminal, audit):
         policy = server.get(f"/api/actions/{action['action_id']}/sdk-stage")["policy"]
         assert policy["transport"] == "OFFLINE_TEST"
         assert policy["explicit_allow_confirmed"] == (terminal == "Succeeded")
+    finally:
+        server.stop()
+
+
+def test_historical_denial_reference_is_explicit_and_read_only(state):
+    server = ServerHarness(state, enforcement_mode="sdk-only", offline_sdk=True)
+    try:
+        server.start()
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(channel="chrome", headless=True)
+            page = browser.new_page(viewport={"width": 1920, "height": 1080})
+            page.set_default_timeout(15000)
+            page.goto(server.url)
+            expect(page.locator("#mode-chip")).to_have_text("LOCAL / OFFLINE SDK TEST")
+            unlock(page, server)
+            expect(page.locator("#policy-origin-label")).to_contain_text(
+                "OFFLINE TEST MODE"
+            )
+            before_records = server.get("/api/handoffs")["records"]
+            before_events = server.get("/api/policy/evidence")["events"]
+            page.locator("#policy-test").click()
+            expect(page.locator("#policy-origin-label")).to_have_text(
+                "HISTORICAL ARMORIQ POLICY DENIAL · NOT THIS RUN"
+            )
+            expect(page.locator("#policy-result")).to_contain_text(
+                "Historical Phase 2.2 evidence; no fresh request"
+            )
+            expect(page.locator("#policy-result")).to_contain_text("NOT_RUN_IN_PHASE24")
+            expect(page.locator("#policy-result")).to_contain_text("Core Action created: No")
+            expect(page.locator("#policy-result")).to_contain_text("Business effect executed: No")
+            assert server.get("/api/handoffs")["records"] == before_records == []
+            assert server.get("/api/policy/evidence")["events"] == before_events == []
+            page.evaluate("window.scrollTo(0, 0)")
+            output = artifact_directory("screenshots")
+            output.mkdir(parents=True, exist_ok=True)
+            page.screenshot(path=str(output / "historical-denial-reference-offline-1920x1080.png"))
+            save_evidence(
+                "historical-denial-reference-offline",
+                {"platform_request": "NOT_RUN", "core_actions": 0, "handoffs": 0},
+            )
+            browser.close()
     finally:
         server.stop()
