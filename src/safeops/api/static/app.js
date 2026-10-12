@@ -119,6 +119,8 @@ function workflowStates() {
   let preparation = 'not-applicable';
   if (sdkOnly) {
     if (['READY','CONSUMED'].includes(sdkStage?.status)) preparation = 'complete';
+    // A terminal stage retains its prepared Plan ID after execution and restoration.
+    else if (sdkStage?.status === 'TERMINAL_OR_EXECUTING' && sdkStage.plan_id) preparation = 'complete';
     else if (['INVALID','EXPIRED','PREPARATION_FAILED'].includes(sdkStage?.status)) preparation = 'failed';
     else if (action?.state === 'Authorized') preparation = 'current';
     else preparation = 'pending';
@@ -153,7 +155,7 @@ function renderTimeline() {
   items.push(['Plan validated',planState,run?.plan ? `Shared Runtime validation · Risk ${run.risk_class}` : run?.error ? `${run.error.code}: ${run.error.message}` : 'No validated Plan loaded.']);
 
   const approvalState = run?.state === 'Approved' ? 'complete' : run?.state === 'Rejected' || run?.state === 'PlanRejected' ? 'failed' : run?.state === 'AwaitingApproval' ? 'current' : 'pending';
-  const approvalText = run?.state === 'Approved' ? `Human decision recorded for Plan version ${run.version}.` : run?.state === 'Rejected' ? 'Plan rejected; no Action was admitted.' : run?.state === 'AwaitingApproval' ? 'Awaiting an explicit decision on this exact Plan.' : 'No approval decision recorded.';
+  const approvalText = run?.state === 'Approved' ? `Human decision recorded · current approved Run version ${run.version}.` : run?.state === 'Rejected' ? 'Plan rejected; no Action was admitted.' : run?.state === 'AwaitingApproval' ? 'Awaiting an explicit decision on this exact Plan.' : 'No approval decision recorded.';
   items.push(['Human approval',approvalState,approvalText]);
 
   items.push(['Action admission',action ? 'complete' : run?.state === 'Approved' ? 'current' : 'pending',action ? `Durable Action ${compactId(action.action_id)} · ${action.state}.` : run?.state === 'Approved' ? 'Approved Plan can be admitted as a separate step.' : 'No Action admitted.']);
@@ -162,7 +164,7 @@ function renderTimeline() {
 
   let prepState = 'not-applicable', prepText = `Not required for the ${executionPath === 'unknown' ? 'current' : executionPath.toUpperCase()} execution path.`;
   if (sdkOnly) {
-    prepState = sdkStage?.status === 'READY' || sdkStage?.status === 'CONSUMED' ? 'complete' : ['INVALID','EXPIRED','PREPARATION_FAILED'].includes(sdkStage?.status) ? 'failed' : action?.state === 'Authorized' ? 'current' : 'pending';
+    prepState = sdkStage?.status === 'READY' || sdkStage?.status === 'CONSUMED' || sdkStage?.status === 'TERMINAL_OR_EXECUTING' && sdkStage.plan_id ? 'complete' : ['INVALID','EXPIRED','PREPARATION_FAILED'].includes(sdkStage?.status) ? 'failed' : action?.state === 'Authorized' ? 'current' : 'pending';
     prepText = sdkStage ? `Server-reported SDK stage: ${sdkStage.status}${sdkStage.expires_at ? ` · Expires ${new Date(sdkStage.expires_at*1000).toISOString()}` : ''}.` : action ? 'SDK stage has not been read or prepared.' : 'Requires an exact Authorized Action.';
   }
   items.push(['SDK preparation',prepState,prepText]);
@@ -180,8 +182,10 @@ function renderTimeline() {
 
   let permitState = executionPath === 'mock' ? 'not-applicable' : 'unknown';
   let permitText = executionPath === 'mock' ? 'No SDK permit is used in the mock path.' : 'A separate consumer permit-validation event is not exposed by the status API.';
-  if (sdkOnly && sdkStage?.status === 'READY') {
-    permitState = 'complete'; permitText = 'The server-side SDK stage validator returned READY; tokens remain on the server.';
+  if (sdkOnly && sdkStage?.audit?.diagnostics?.execution?.late_permit_verified === true) {
+    permitState = 'complete'; permitText = 'Consumer execution diagnostics confirm the late signed dispatch permit was verified.';
+  } else if (sdkOnly && sdkStage?.status === 'READY') {
+    permitState = 'pending'; permitText = 'The exact Authorized SDK stage is READY. Execution-time permit verification has not yet been reported.';
   } else if (sdkOnly && sdkStage?.status === 'CONSUMED') {
     permitState = 'unknown'; permitText = 'The prepared stage is consumed; no separate permit-validation trace is returned.';
   }

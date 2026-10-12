@@ -40,15 +40,27 @@ def test_sdk_only_clicks_and_persisted_restore(state, fault, terminal, audit):
             expect(page.locator("#execute")).to_be_disabled()
             page.locator("#prepare-sdk").click()
             expect(page.locator("#sdk-stage-status")).to_contain_text("READY")
+            permit_evidence = page.locator("#timeline .evidence-entry").filter(
+                has_text="Consumer permit / argument validation"
+            )
+            expect(permit_evidence).to_have_attribute("data-state", "pending")
             assert server.get("/api/handoffs")["records"] == []
             page.locator("#execute").click()
             expect(page.locator("#action-state")).to_have_text(terminal)
             expect(page.locator("#sdk-audit-status")).to_contain_text(audit)
+            if terminal == "Succeeded":
+                expect(permit_evidence).to_have_attribute("data-state", "complete")
+            expect(page.locator('[data-step="preparation"]')).to_have_attribute(
+                "data-state", "complete"
+            )
             expected_policy = (
                 "Explicit Allow NOT CONFIRMED" if fault == "deny" else "Explicit Allow CONFIRMED"
             )
             expect(page.locator("#sdk-policy-status")).to_contain_text("OFFLINE SDK fixture")
             expect(page.locator("#sdk-policy-status")).to_contain_text(expected_policy)
+            expect(page.locator('[data-step="preparation"]')).to_have_attribute(
+                "data-state", "complete"
+            )
             action = json.loads(page.locator("#action-json").text_content())
             records = server.get("/api/handoffs")["records"]
             assert len(records) == (0 if terminal == "Failed" else 1)

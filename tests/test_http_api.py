@@ -13,10 +13,11 @@ def test_health_status_security(client, state):
     assert metadata["description"] == "A permissioned AI agent for secure incident handoffs."
     assert client.get("/api/status").json()["provider"]["mode"] == "fixture"
     html = client.get("/")
-    assert "<title>Aegis Relay</title>" in html.text and "<h1>Aegis Relay</h1>" in html.text
+    assert "<title>Aegis Relay — Agent Execution Console</title>" in html.text
+    assert "<h1>Agent Execution Console</h1>" in html.text
     assert "Trust the intent. Govern the action." in html.text
-    assert "A permissioned AI agent for secure incident handoffs." in html.text
-    assert "Simulated policy enforcement" in html.text
+    assert "permissioned AI agent execution console for governed incident handoffs." in html.text
+    assert "LOCAL / MOCK" in html.text
     assert (state / "capability").read_text("ascii") not in html.text
     assert "frame-ancestors 'none'" in html.headers["content-security-policy"]
     assert client.get("/api/handoffs", headers={"Authorization": "Bearer bad"}).status_code == 401
