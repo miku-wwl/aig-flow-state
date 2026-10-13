@@ -5,19 +5,20 @@
 A permissioned AI agent for secure incident handoffs.
 
 Built for **Flow State — AI Agent & MCP Hackathon**, organized by **ArmorIQ**.
-Current stage: **Phase 2.4 SDK-only integrated into the existing FastAPI/browser
-application. One explicitly approved real browser execution succeeded with one
-durable record and matching receipt; final regression: 179 passed, including 14
-Chrome tests. New audit POST/completion are acknowledged; independent audit
-readback remains blocked, and submission readiness remains NO.** See the
-[Phase 2.4 report](docs/phase24-application-e2e-report.md) for final measured gates.
+The redesigned console makes the separate Plan, Approval, Admission,
+Authorization, SDK preparation and execution stages visible. Its timeline and
+receipt summary display backend evidence; they do not grant permissions.
 
-Phase 2.4 source is published at [0058242c4fda4b30065cd19225566d6e814bf074](https://github.com/miku-wwl/aig-flow-state/commit/0058242c4fda4b30065cd19225566d6e814bf074); local and GitHub main were
-verified on 12 October 2026. Phase 2.5 final delivery prepares a local narrated
-three-minute MP4, captions and sanitized evidence in ignored
-`.artifacts/final-submission/`. These assets have no public URL yet. This
-documentation update records the completed local delivery. Historical reports retain
-their original qualification-time statements.
+The V4 reference completed one real phi4-mini/ArmorIQ SDK-only handoff using
+this redesigned console and fresh human gates. Independent verification found
+one execution attempt, one SQLite handoff, Core Action Succeeded and a matching
+durable receipt. Authenticated Platform readback matched the new report and
+showed its allowed/Success row; a separate historical purge denial remains
+clearly labelled. The V4 artifacts are private, ignored files under
+`.artifacts/final-submission/v4-redesigned-ui/`. The final competition video
+still requires the operator's own fresh execution and real English voice.
+No video has been uploaded and no competition entry has been submitted. Qualification-time statements in
+[historical reports](docs/phase24-application-e2e-report.md) remain unchanged.
 
 The shared Core is a pre-existing project dependency maintained by the same
 operator. It is reused through its pinned public API; Core development is not
@@ -104,13 +105,14 @@ reload the file after refreshing. The browser remembers only the selected Run UU
 namespaced by execution scope, and restores it with GET requests.
 
 1. Enter an incident request containing an `INC-number`, then generate and save the Run.
-2. Review incident ID, summary, handoff note, full Plan, validation and `SIDE_EFFECT` risk.
+2. Review incident ID, summary, handoff note, `Full structured Plan JSON`, validation and `SIDE_EFFECT` risk.
 3. Approve the exact Plan, or reject it without creating an Action.
 4. Admit the approved Action. This leaves it `Pending`.
 5. Authorize the Action. This leaves it `Authorized`, with no business effect yet.
 6. Execute once. Match the `Succeeded` receipt with the persisted handoff record.
-7. Replay the exact request to observe the same receipt and one record, or refresh,
-   reload the capability, and observe the preserved state.
+7. Refresh, reload the capability and click **Open Run** with the saved UUID to
+   observe the preserved state using read-only requests. For a live reference,
+   do not replay or dispatch another Action to improve the recording.
 
 For SDK-only, exclusively initialize **new** private state, provision its local
 dispatch keys/audit store, and use existing ArmorIQ CLI credentials:

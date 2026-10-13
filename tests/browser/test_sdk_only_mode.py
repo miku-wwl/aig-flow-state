@@ -104,9 +104,7 @@ def test_historical_denial_reference_is_explicit_and_read_only(state):
             page.goto(server.url)
             expect(page.locator("#mode-chip")).to_have_text("LOCAL / OFFLINE SDK TEST")
             unlock(page, server)
-            expect(page.locator("#policy-origin-label")).to_contain_text(
-                "OFFLINE TEST MODE"
-            )
+            expect(page.locator("#policy-origin-label")).to_contain_text("OFFLINE TEST MODE")
             before_records = server.get("/api/handoffs")["records"]
             before_events = server.get("/api/policy/evidence")["events"]
             page.locator("#policy-test").click()
