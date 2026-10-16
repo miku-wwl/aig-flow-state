@@ -34,6 +34,10 @@
   </header>
 
   <main class="console">
+    <section id="public-banner" class="public-demo-banner" hidden>
+      <strong>PUBLIC SIMULATION · Synthetic data only</strong>
+      <p>DeepSeek proposes a Plan. Approval and Authorization are separate human steps. Execution writes only to your isolated demo store; it makes no ArmorIQ request. Four Plans per session; shared daily limits apply.</p>
+    </section>
     <section class="page-heading">
       <div>
         <p class="eyebrow">SECURE INCIDENT HANDOFF</p>
@@ -67,10 +71,11 @@
     <section class="access-bar" aria-label="Workspace access">
       <div class="access-state">
         <span id="workspace-state" class="workspace-indicator" data-unlocked="false">WORKSPACE LOCKED</span>
-        <div><strong>Operator capability</strong><p id="capability-status">Load your private capability file to unlock this workspace. It stays in browser memory.</p></div>
+        <div><strong id="access-title">Operator capability</strong><p id="capability-status">Load your private capability file to unlock this workspace. It stays in browser memory.</p></div>
       </div>
       <div class="access-actions">
         <label class="file-button">Load capability<input id="capability-file" type="file" aria-label="Load private capability file"></label>
+        <button id="start-demo" class="button primary" hidden>Start isolated demo session</button>
         <button id="lock" class="button quiet">Lock workspace</button>
       </div>
     </section>
@@ -189,6 +194,12 @@
       </section>
     </section>
 
+    <section id="public-history" class="card" hidden>
+      <p class="eyebrow">READ-ONLY HISTORICAL EVIDENCE</p>
+      <h2>Genuine ArmorIQ integration evidence</h2>
+      <p>These historical reports describe genuine remote policy decisions. They are separate from this visitor's simulated execution.</p>
+      <div id="public-history-links"></div>
+    </section>
     <footer id="mode-footer">Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · Connecting…</footer>
   </main>
 </body>

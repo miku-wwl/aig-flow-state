@@ -130,7 +130,9 @@ def test_happy_replay_refresh_and_mock_denial(page, server):
     page.locator("#policy-test").click()
     expect(page.locator("#policy-result")).to_contain_text("PolicyDenied")
     expect(page.locator("#policy-result")).to_contain_text('"core_action_created": false')
-    expect(page.locator("#policy-origin-label")).to_have_text("LOCAL MOCK POLICY DENIAL · NOT ARMORIQ")
+    expect(page.locator("#policy-origin-label")).to_have_text(
+        "LOCAL MOCK POLICY DENIAL · NOT ARMORIQ"
+    )
     screenshot(page, "03-simulated-policy-denial.png")
     assert_branding(page)
     page.reload()

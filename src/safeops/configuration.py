@@ -16,6 +16,9 @@ class Settings:
     executor_fault: str = "none"
     predecessor_stopped: bool = False
     enforcement_mode: str = "mock"
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = "deepseek-flash"
+    deepseek_thinking: str = "disabled"
 
     def __post_init__(self):
         url = urlsplit(self.ollama_url)
@@ -29,8 +32,13 @@ class Settings:
             or url.path not in {"", "/"}
         ):
             raise ValueError("Ollama must use a local HTTP endpoint")
-        if self.provider not in {"ollama", "fixture"}:
-            raise ValueError("Choose ollama or fixture explicitly")
+        if self.provider not in {"ollama", "fixture", "deepseek"}:
+            raise ValueError("Choose ollama, fixture or deepseek explicitly")
+        from safeops.planning.deepseek_provider import validate_deepseek_options
+
+        validate_deepseek_options(
+            self.deepseek_base_url, self.deepseek_model, self.deepseek_thinking
+        )
         if self.enforcement_mode not in {"mock", "real", "proxy", "sdk-only"}:
             raise ValueError("Choose mock, proxy (legacy real) or sdk-only explicitly")
         if self.enforcement_mode != "mock" and self.executor_fault != "none":
@@ -56,4 +64,7 @@ class Settings:
             model_timeout=float(os.getenv("SAFEOPS_MODEL_TIMEOUT", "28")),
             predecessor_stopped=predecessor_stopped,
             enforcement_mode=os.getenv("SAFEOPS_ENFORCEMENT_MODE", "mock"),
+            deepseek_base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
+            deepseek_model=os.getenv("DEEPSEEK_MODEL", "deepseek-flash"),
+            deepseek_thinking=os.getenv("DEEPSEEK_THINKING", "disabled"),
         )

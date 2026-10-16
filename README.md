@@ -221,3 +221,37 @@ and installed 0.6.10 API were inspected; its actual capture/token/invoke flow is
 Historical proxy forwarding remains unqualified; its Unknown is preserved. SDK-only
 qualification and new application results are separate in the Phase 2.4 report.
 Mock results alone do not establish competition readiness. No submission has occurred.
+
+## DeepSeek planning and the public simulation
+
+`--provider deepseek` selects genuine remote Plan generation using
+`deepseek-flash`, thinking disabled, JSON object output and at most 600 output
+tokens. Supply the existing `DEEPSEEK_API_KEY` through a protected process/service
+environment. The provider accepts only `https://api.deepseek.com`, makes one
+bounded request and returns the original model JSON to the pinned Core validator.
+It never repairs output, retries, falls back to another provider or grants
+Approval or Authorization. Ollama and explicit offline fixture mode remain available.
+
+The original operator application must remain private. The separate
+`python -m safeops.public_demo` entry point provides the V4 interface for an
+anonymous HTTPS demonstration with **simulated local effects only**. It always
+composes mock enforcement; it does not install or call real ArmorIQ credentials.
+Its read-only historical links describe genuine earlier Allow/Blocked evidence,
+not a policy decision obtained by the public simulation.
+
+Initialize a new private public-demo directory once with `init --state <path>`.
+Serve it behind the approved HTTPS reverse proxy with `serve --state <path>
+--origin https://<canonical-host> --provider deepseek --predecessor-stopped`.
+The backend binds only to loopback and uses one worker. Each visitor receives
+separate persistent Core/business stores, while the Runtime capability stays
+server-side. Human Plan Approval, Action admission, independent Authorization
+and Execute remain separate explicit steps.
+
+The facade requires a Secure HttpOnly SameSite cookie, exact Origin checks and
+CSRF protection for mutations, rejects public Authorization headers and exposes
+only an explicit route allowlist. Persisted limits include four Plans per session,
+40 per day and 160 total, with one model request at a time. State and quotas survive
+restart; an Unknown Action is never automatically retried. This is a bounded
+hackathon simulation, not production multi-user authentication or live SDK proof.
+See [the single-VM deployment instructions](deploy/azure/README.md) for the approved
+infrastructure, private credential transfer and cloud acceptance checks.

@@ -4,12 +4,15 @@ const $ = id => document.getElementById(id);
 let capability = '', run = null, action = null, lastExecution = null, busy = false, scope = null;
 let sdkOnly = false, sdkStage = null, executionPath = 'unknown', statusData = null;
 let businessRecords = [], businessRecordsLoaded = false, policyEvidence = null;
+let publicDemo = false, demoCsrf = '';
 
 const buttons = ['generate','approve','reject','admit','authorize','prepare-sdk','execute','try-unauthorized','replay','restore','refresh-records','policy-test'];
 const stageLabels = {complete:'Complete',current:'Current',pending:'Pending',failed:'Failed',unknown:'Unknown','not-applicable':'N/A'};
 
 function controls() {
-  buttons.forEach(id => $(id).disabled = busy || !capability);
+  const unlocked = publicDemo ? !!demoCsrf : !!capability;
+  buttons.forEach(id => $(id).disabled = busy || !unlocked);
+  $('start-demo').disabled = busy;
   ['approve','reject'].forEach(id => $(id).disabled ||= run?.state !== 'AwaitingApproval');
   $('admit').disabled ||= run?.state !== 'Approved' || !!action;
   $('authorize').disabled ||= action?.state !== 'Pending';
@@ -23,18 +26,20 @@ function controls() {
   const receiptReference = action?.result?.receipt_reference;
   $('copy-receipt').disabled = !receiptReference;
   $('copy-success-receipt').disabled = !receiptReference || action?.state !== 'Succeeded';
-  $('workspace-state').textContent = capability ? 'WORKSPACE UNLOCKED' : 'WORKSPACE LOCKED';
-  $('workspace-state').dataset.unlocked = String(!!capability);
+  $('workspace-state').textContent = publicDemo ? unlocked ? 'DEMO SESSION READY' : 'DEMO SESSION PAUSED' : capability ? 'WORKSPACE UNLOCKED' : 'WORKSPACE LOCKED';
+  $('workspace-state').dataset.unlocked = String(unlocked);
 }
 
 function message(id, text) { $(id).textContent = text; $(id).hidden = !text; }
 
 async function api(path, {body, key, expectedError = false} = {}) {
   const headers = {};
-  if (capability) headers.Authorization = 'Bearer ' + capability;
+  if (capability && !publicDemo) headers.Authorization = 'Bearer ' + capability;
+  if (publicDemo && demoCsrf) headers['X-Aegis-CSRF'] = demoCsrf;
+  if (path === '/api/demo/session') headers['X-Aegis-Demo'] = '1';
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (key) headers['Idempotency-Key'] = key;
-  const response = await fetch(path, {method:body === undefined ? 'GET':'POST', headers, body:body === undefined ? undefined : JSON.stringify(body), cache:'no-store', credentials:'omit'});
+  const response = await fetch(path, {method:body === undefined ? 'GET':'POST', headers, body:body === undefined ? undefined : JSON.stringify(body), cache:'no-store', credentials:publicDemo || path === '/api/status' ? 'same-origin' : 'omit'});
   const data = await response.json();
   if (!response.ok && !expectedError) throw new Error(`${data.error?.code || 'HTTP_' + response.status}: ${data.error?.message || 'Request denied'}`);
   return {response, data};
@@ -93,6 +98,7 @@ function renderSuccess() {
   const succeeded = action?.state === 'Succeeded';
   $('success-summary').hidden = !succeeded;
   if (!succeeded) return;
+  $('success-title').textContent = publicDemo ? 'Simulated handoff: Succeeded' : 'Core Action: Succeeded';
   const step = run?.plan?.steps?.[0];
   const args = step?.arguments || {};
   const receipt = action?.result?.receipt_reference || '';
@@ -284,13 +290,33 @@ async function loadRun(id) {
 
 async function updateStatus() {
   const {data} = await api('/api/status'); statusData=data; scope=data.execution_scope;
+  publicDemo = data.public_demo === true;
+  demoCsrf = publicDemo ? data.demo_csrf || '' : '';
+  $('public-banner').hidden = !publicDemo;
+  $('public-history').hidden = !publicDemo;
+  $('start-demo').hidden = !publicDemo;
+  $('capability-file').parentElement.hidden = publicDemo;
+  $('capability-file').disabled = publicDemo;
+  if (publicDemo) {
+    $('access-title').textContent = 'Isolated public demo session';
+    $('capability-status').textContent = 'Your session uses synthetic data and simulated effects. Private operator credentials are not accepted.';
+    $('lock').textContent = 'Pause demo controls';
+    $('intent').maxLength = 1500;
+    $('public-history-links').replaceChildren();
+    for (const item of data.historical_evidence || []) {
+      const p=document.createElement('p'), a=document.createElement('a');
+      a.textContent=item.label; a.href=item.source; a.target='_blank'; a.rel='noopener noreferrer';
+      p.append(a,document.createElement('br'),document.createTextNode(item.detail));
+      $('public-history-links').append(p);
+    }
+  }
   executionPath=data.execution_path || 'unknown';
-  $('provider-mode').textContent = data.provider.mode === 'fixture' ? 'Deterministic fixture · offline' : `Live local Ollama · ${data.provider.model || 'discover phi4-mini'}`;
+  $('provider-mode').textContent = data.provider.mode === 'fixture' ? 'Deterministic fixture · offline' : data.provider.mode === 'deepseek' ? `DeepSeek · ${data.provider.model} · thinking disabled` : `Live local Ollama · ${data.provider.model || 'discover phi4-mini'}`;
   const live = data.enforcement === 'LIVE';
   sdkOnly = data.execution_path === 'sdk-only';
   const offline = live && data.armoriq?.transport === 'OFFLINE_TEST';
   $('prepare-sdk').hidden = !sdkOnly;
-  $('mode-chip').textContent = offline ? 'LOCAL / OFFLINE SDK TEST' : sdkOnly ? 'ARMORIQ SDK-ONLY LIVE' : live ? 'PROXY LIVE' : 'LOCAL / MOCK';
+  $('mode-chip').textContent = publicDemo ? 'PUBLIC SIMULATION' : offline ? 'LOCAL / OFFLINE SDK TEST' : sdkOnly ? 'ARMORIQ SDK-ONLY LIVE' : live ? 'PROXY LIVE' : 'LOCAL / MOCK';
   $('mode-chip').dataset.mode = offline ? 'offline' : live ? 'live' : 'mock';
   $('enforcement-mode').textContent = data.enforcement_label;
   $('integration-status').textContent = live ? offline ? 'OFFLINE TEST TRANSPORT · no platform request' : `Connectivity ${data.armoriq.connectivity} · Registration ${data.armoriq.registration}` : 'Not connected · local mock only';
@@ -301,8 +327,16 @@ async function updateStatus() {
   $('policy-test').textContent = sdkOnly ? 'Load historical denial reference' : offline ? 'Run offline policy fixture' : live ? 'Run explicit policy denial probe' : 'Test local mock denial';
   $('mode-footer').textContent = `Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · ${offline ? 'Offline SDK transport — no live qualification' : live ? 'Live ArmorIQ path — backend status and evidence only' : 'Local mock execution path'}`;
   renderPresentation();
+  controls();
   return data;
 }
+
+$('start-demo').onclick = () => perform(async () => {
+  const {data}=await api('/api/demo/session',{body:{}}); demoCsrf=data.demo_csrf;
+  await updateStatus(); await records();
+  const remembered=localStorage.getItem('safeops-run-' + scope);
+  if (remembered) await loadRun(remembered);
+});
 
 async function copyValue(value, label) {
   if (!value) return;
@@ -329,6 +363,7 @@ $('capability-file').addEventListener('change', () => perform(async () => {
 }));
 
 $('lock').onclick = () => {
+  demoCsrf='';
   capability=''; run=null; action=null; lastExecution=null; sdkStage=null; businessRecords=[]; businessRecordsLoaded=false; policyEvidence=null;
   renderRun(); renderAction(); $('records').replaceChildren(); $('policy-result').textContent='No policy evidence loaded.'; $('live-evidence').textContent='';
   $('capability-status').textContent='Workspace locked. Load your private capability file.'; controls();
@@ -390,4 +425,10 @@ setInterval(() => {
 }, 500);
 
 renderRun(); renderAction(); controls();
-updateStatus().catch(error => message('error',error.message));
+updateStatus().then(async () => {
+  if (publicDemo && demoCsrf) {
+    await records();
+    const remembered=localStorage.getItem('safeops-run-' + scope);
+    if (remembered) await loadRun(remembered);
+  }
+}).catch(error => message('error',error.message));

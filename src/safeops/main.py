@@ -192,7 +192,7 @@ def main():
     mcp.add_argument("--diagnostics", action="store_true", help="Private sanitized MCP diagnostics")
     serve = commands.add_parser("serve", help="Serve an already initialized local runtime")
     serve.add_argument("--state", type=Path)
-    serve.add_argument("--provider", choices=["ollama", "fixture"])
+    serve.add_argument("--provider", choices=["ollama", "fixture", "deepseek"])
     serve.add_argument("--enforcement-mode", choices=["mock", "real", "proxy", "sdk-only"])
     serve.add_argument("--port", type=int, default=8765)
     serve.add_argument("--predecessor-stopped", action="store_true", required=True)

@@ -10,10 +10,10 @@ from fastapi.testclient import TestClient
 
 from safeops.configuration import Settings
 from safeops.integration.dispatch_permit import load_store, provision_live
-from safeops.integration.sdk_application import MCP_ID, ORG_ID, SDKOnlyApplication
+from safeops.integration.sdk_application import MCP_ID, ORG_ID, SDKOnlyApplication, sdk_client
 from safeops.main import create_app
 from tests.conftest import approved_action, command_headers
-from tests.test_sdk_only import POLICY_ID, POLICY_NAME, OfflineSDK
+from tests.test_sdk_only import POLICY_ID, POLICY_NAME, OfflineSDK, QualificationRejected
 
 
 class ApplicationWire(OfflineSDK):
@@ -115,6 +115,23 @@ def execute(client, action, headers=None):
         },
         headers=headers or command_headers(),
     )
+
+
+@pytest.mark.parametrize(
+    ("api_key", "email"),
+    [(None, None), ("not-an-armoriq-key", "operator@example.test"), ("ak_live_test", "invalid")],
+)
+def test_missing_or_malformed_credentials_fail_before_network(monkeypatch, api_key, email):
+    monkeypatch.delenv("ARMORIQ_API_KEY", raising=False)
+    monkeypatch.delenv("SAFEOPS_ARMORIQ_USER_EMAIL", raising=False)
+    if api_key is not None:
+        monkeypatch.setenv("ARMORIQ_API_KEY", api_key)
+    if email is not None:
+        monkeypatch.setenv("SAFEOPS_ARMORIQ_USER_EMAIL", email)
+    monkeypatch.setattr("safeops.integration.sdk_application.load_credentials", lambda: None)
+
+    with pytest.raises(QualificationRejected, match="Existing ArmorIQ credentials required"):
+        sdk_client()
 
 
 def test_real_app_sdk_lifecycle_and_exact_replay(state):

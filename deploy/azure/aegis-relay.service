@@ -1,0 +1,43 @@
+[Unit]
+Description=Aegis Relay isolated public simulation
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=120
+StartLimitBurst=4
+
+[Service]
+Type=simple
+User=aegis-relay
+Group=aegis-relay
+WorkingDirectory=/opt/aegis-relay/app
+EnvironmentFile=/etc/aegis-relay/deepseek.env
+Environment=PYTHONUNBUFFERED=1
+Environment=DEEPSEEK_MODEL=deepseek-flash
+Environment=DEEPSEEK_THINKING=disabled
+Environment=DEEPSEEK_BASE_URL=https://api.deepseek.com
+Environment=SAFEOPS_MODEL_TIMEOUT=28
+ExecStart=/opt/aegis-relay/app/.venv/bin/python -m safeops.public_demo serve --state /var/lib/aegis-relay/public --origin https://__HOSTNAME__ --provider deepseek --port 8765 --predecessor-stopped
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=40
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/aegis-relay
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+MemoryHigh=500M
+MemoryMax=650M
+TasksMax=96
+
+[Install]
+WantedBy=multi-user.target

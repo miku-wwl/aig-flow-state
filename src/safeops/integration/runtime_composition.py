@@ -20,6 +20,7 @@ from safeops.domain.handoff import binding_for, capability_for
 from safeops.execution.handoff_executor import HandoffExecutor
 from safeops.execution.handoff_store import HandoffStore
 from safeops.integration.mock_armoriq import MockArmorIQClient
+from safeops.planning.deepseek_provider import DeepSeekSafeOpsProvider
 from safeops.planning.fixture_provider import DeterministicFixtureProvider
 from safeops.planning.ollama_provider import OllamaSafeOpsProvider
 
@@ -88,6 +89,13 @@ def composition(settings, *, provider=None, enforcement=None, provision_gate=Fal
     provider = provider or (
         DeterministicFixtureProvider(fault=settings.fixture_fault)
         if settings.provider == "fixture"
+        else DeepSeekSafeOpsProvider(
+            base_url=settings.deepseek_base_url,
+            model=settings.deepseek_model,
+            thinking=settings.deepseek_thinking,
+            timeout=settings.model_timeout,
+        )
+        if settings.provider == "deepseek"
         else OllamaSafeOpsProvider(
             settings.ollama_url, model=settings.model, timeout=settings.model_timeout
         )

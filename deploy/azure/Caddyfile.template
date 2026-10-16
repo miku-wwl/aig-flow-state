@@ -1,0 +1,12 @@
+__HOSTNAME__ {
+    request_body {
+        max_size 8KB
+    }
+    encode gzip
+    header -Server
+    reverse_proxy 127.0.0.1:8765 {
+        transport http {
+            response_header_timeout 35s
+        }
+    }
+}

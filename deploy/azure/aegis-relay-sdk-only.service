@@ -1,0 +1,44 @@
+[Unit]
+Description=Aegis Relay protected ArmorIQ SDK-only operator service
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=120
+StartLimitBurst=4
+
+[Service]
+Type=simple
+User=aegis-sdk-only
+Group=aegis-sdk-only
+WorkingDirectory=/opt/aegis-relay/app
+EnvironmentFile=/etc/aegis-relay/deepseek.env
+EnvironmentFile=-/etc/aegis-relay-sdk-only/armoriq.env
+Environment=PYTHONUNBUFFERED=1
+Environment=SAFEOPS_MODEL_TIMEOUT=28
+Environment=DEEPSEEK_MODEL=deepseek-flash
+Environment=DEEPSEEK_THINKING=disabled
+Environment=DEEPSEEK_BASE_URL=https://api.deepseek.com
+ExecStart=/opt/aegis-relay/app/.venv/bin/python -m safeops.main serve --state /var/lib/aegis-relay-sdk-only/runtime --provider deepseek --enforcement-mode sdk-only --port 8770 --predecessor-stopped
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=40
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/aegis-relay-sdk-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+MemoryHigh=300M
+MemoryMax=384M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

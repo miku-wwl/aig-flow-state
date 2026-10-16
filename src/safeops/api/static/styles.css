@@ -352,3 +352,9 @@ footer { padding: 18px 0 0; color: var(--subtle); font-size: 10px; text-align: c
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+.public-demo-banner { border: 1px solid #b38a3d; background: #282318; border-radius: 10px; padding: 16px 20px; margin-bottom: 18px; color: #f6cf83; }
+.public-demo-banner p { margin: 7px 0 0; line-height: 1.5; }
+#public-history { margin-top: 16px; }
+#public-history a { color: #65d9d1; overflow-wrap: anywhere; }
+#public-history-links>p { border-top: 1px solid #2d3b4c; padding-top: 12px; }
