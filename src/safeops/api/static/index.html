@@ -38,6 +38,31 @@
       <strong>PUBLIC SIMULATION · Synthetic data only</strong>
       <p>DeepSeek proposes a Plan. Approval and Authorization are separate human steps. Execution writes only to your isolated demo store; it makes no ArmorIQ request. Four Plans per session; shared daily limits apply.</p>
     </section>
+    <section id="cloud-evidence" class="card cloud-evidence-card" hidden aria-labelledby="cloud-evidence-title">
+      <div class="panel-heading cloud-evidence-heading">
+        <div><p id="cloud-evidence-eyebrow" class="eyebrow">ARMORIQ CLOUD INTEGRATION STATUS</p><h2 id="cloud-evidence-title">Checking persisted Azure evidence…</h2></div>
+        <span id="cloud-evidence-status" class="evidence-status">CHECKING</span>
+      </div>
+      <p id="cloud-evidence-message" class="cloud-evidence-message">Loading a sanitized read-only record from the protected Azure SDK-only runtime.</p>
+      <div class="cloud-evidence-grid" aria-label="Verified historical execution evidence">
+        <div><span class="status-label">EXECUTION PATH</span><strong id="cloud-evidence-path">Not loaded</strong></div>
+        <div><span class="status-label">ARMORIQ DECISION</span><strong id="cloud-evidence-decision">Not loaded</strong></div>
+        <div><span class="status-label">REGISTERED POLICY</span><strong id="cloud-evidence-policy">Not loaded</strong></div>
+        <div><span class="status-label">CORE ACTION</span><strong id="cloud-evidence-action">Not loaded</strong></div>
+        <div><span class="status-label">DURABLE RECEIPT</span><strong id="cloud-evidence-receipt">Not loaded</strong></div>
+        <div><span class="status-label">SDK AUDIT</span><strong id="cloud-evidence-audit">Not loaded</strong></div>
+      </div>
+      <p class="cloud-current-mode"><strong>Current public execution mode: MOCK.</strong> The anonymous playground never sends ArmorIQ enforcement requests. The Allow below is historical evidence from the protected operator runtime.</p>
+      <details id="cloud-evidence-details" class="cloud-evidence-details" hidden>
+        <summary>Open sanitized evidence references</summary>
+        <dl id="cloud-evidence-refs" class="cloud-evidence-refs"></dl>
+      </details>
+      <div class="historical-denial" aria-label="Separate historical ArmorIQ denial evidence">
+        <div><p class="eyebrow">SEPARATE HISTORICAL DENY · NOT THIS AZURE ACTION</p><strong id="historical-denial-title">Historical denial record</strong></div>
+        <p id="historical-denial-detail">Loading the documented Phase 2.2 evidence…</p>
+        <a id="historical-denial-source" href="https://github.com/miku-wwl/aig-flow-state/blob/main/docs/phase22-sdk-only-feasibility.md" target="_blank" rel="noopener noreferrer">Open Phase 2.2 source report</a>
+      </div>
+    </section>
     <section class="page-heading">
       <div>
         <p class="eyebrow">SECURE INCIDENT HANDOFF</p>
@@ -194,12 +219,6 @@
       </section>
     </section>
 
-    <section id="public-history" class="card" hidden>
-      <p class="eyebrow">READ-ONLY HISTORICAL EVIDENCE</p>
-      <h2>Genuine ArmorIQ integration evidence</h2>
-      <p>These historical reports describe genuine remote policy decisions. They are separate from this visitor's simulated execution.</p>
-      <div id="public-history-links"></div>
-    </section>
     <footer id="mode-footer">Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · Connecting…</footer>
   </main>
 </body>

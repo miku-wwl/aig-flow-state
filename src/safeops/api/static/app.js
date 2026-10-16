@@ -111,6 +111,51 @@ function renderSuccess() {
   $('success-receipt').title = receipt;
 }
 
+function renderCloudEvidence(bundle) {
+  const evidence = bundle?.evidence;
+  const verified = bundle?.status === 'VERIFIED' && evidence?.status === 'VERIFIED';
+  const set = (id, value) => { $(id).textContent = value || 'Not available'; };
+  $('cloud-evidence-status').textContent = verified ? 'VERIFIED' : 'UNVERIFIED';
+  $('cloud-evidence-status').dataset.state = verified ? 'verified' : 'unknown';
+  $('cloud-evidence-title').textContent = verified
+    ? 'Verified Azure SDK-only execution — historical read-only evidence'
+    : 'ArmorIQ cloud evidence is unverified';
+  $('cloud-evidence-eyebrow').textContent = verified
+    ? 'PERSISTED AZURE CLOUD EVIDENCE'
+    : 'ARMORIQ CLOUD INTEGRATION STATUS';
+  $('cloud-evidence-message').textContent = verified
+    ? `Protected VM readback confirms a real ArmorIQ Allow on ${new Date(evidence.execution_at_utc).toLocaleString('en-NZ', {timeZone:'UTC', dateStyle:'medium', timeStyle:'short'})} UTC. This record is historical and read-only; no new live request is sent here.`
+    : 'The protected VM evidence file is missing or did not match the expected persisted Run, Action, policy, receipt and audit records. No Allow is claimed.';
+  set('cloud-evidence-path', verified ? 'SDK-only · REAL_PLATFORM' : 'Not verified');
+  set('cloud-evidence-decision', verified ? `Allow · HTTP ${evidence.enforcement_http_status}` : 'Not verified');
+  set('cloud-evidence-policy', verified ? `${evidence.policy_name} · ${evidence.policy_id}` : 'Not verified');
+  set('cloud-evidence-action', verified ? `Succeeded · ${evidence.tool_name} v${evidence.tool_version} · ${evidence.target}` : 'Not verified');
+  set('cloud-evidence-receipt', verified ? '1 synthetic handoff · receipt matched' : 'Not verified');
+  set('cloud-evidence-audit', verified ? `Acknowledged · HTTP ${evidence.audit_http_status}` : 'Not verified');
+  $('cloud-evidence-details').hidden = !verified;
+  $('cloud-evidence-refs').replaceChildren();
+  if (verified) {
+    const refs = [
+      ['Run', evidence.run_id], ['Action', evidence.action_id], ['Intent Plan', evidence.plan_id],
+      ['ArmorIQ enforcement request', evidence.enforcement_request_id], ['Policy', evidence.policy_id],
+      ['Receipt', evidence.receipt_reference], ['Audit', evidence.audit_id],
+      ['Execution UTC', evidence.execution_at_utc], ['Source', evidence.source]
+    ];
+    for (const [label, value] of refs) {
+      const dt = document.createElement('dt'), dd = document.createElement('dd');
+      dt.textContent = label; dd.textContent = value; $('cloud-evidence-refs').append(dt, dd);
+    }
+  }
+  const denial = bundle?.historical_denial;
+  set('historical-denial-title', denial
+    ? `${denial.status} · ${denial.operation} · ${denial.reason}`
+    : 'Historical denial details unavailable');
+  set('historical-denial-detail', denial
+    ? `${denial.origin}; ${denial.date_utc} UTC. Request ${denial.request_id}. This separate historical Block is not from the Azure Allow Action above.`
+    : 'The documented historical denial record is unavailable.');
+  if (denial?.source) $('historical-denial-source').href = denial.source;
+}
+
 function setStep(key, state) {
   const item = document.querySelector(`[data-step="${key}"]`);
   if (!item) return;
@@ -293,7 +338,7 @@ async function updateStatus() {
   publicDemo = data.public_demo === true;
   demoCsrf = publicDemo ? data.demo_csrf || '' : '';
   $('public-banner').hidden = !publicDemo;
-  $('public-history').hidden = !publicDemo;
+  $('cloud-evidence').hidden = !publicDemo;
   $('start-demo').hidden = !publicDemo;
   $('capability-file').parentElement.hidden = publicDemo;
   $('capability-file').disabled = publicDemo;
@@ -302,13 +347,7 @@ async function updateStatus() {
     $('capability-status').textContent = 'Your session uses synthetic data and simulated effects. Private operator credentials are not accepted.';
     $('lock').textContent = 'Pause demo controls';
     $('intent').maxLength = 1500;
-    $('public-history-links').replaceChildren();
-    for (const item of data.historical_evidence || []) {
-      const p=document.createElement('p'), a=document.createElement('a');
-      a.textContent=item.label; a.href=item.source; a.target='_blank'; a.rel='noopener noreferrer';
-      p.append(a,document.createElement('br'),document.createTextNode(item.detail));
-      $('public-history-links').append(p);
-    }
+    renderCloudEvidence(data.armoriq_evidence);
   }
   executionPath=data.execution_path || 'unknown';
   $('provider-mode').textContent = data.provider.mode === 'fixture' ? 'Deterministic fixture · offline' : data.provider.mode === 'deepseek' ? `DeepSeek · ${data.provider.model} · thinking disabled` : `Live local Ollama · ${data.provider.model || 'discover phi4-mini'}`;
@@ -319,7 +358,9 @@ async function updateStatus() {
   $('mode-chip').textContent = publicDemo ? 'PUBLIC SIMULATION' : offline ? 'LOCAL / OFFLINE SDK TEST' : sdkOnly ? 'ARMORIQ SDK-ONLY LIVE' : live ? 'PROXY LIVE' : 'LOCAL / MOCK';
   $('mode-chip').dataset.mode = offline ? 'offline' : live ? 'live' : 'mock';
   $('enforcement-mode').textContent = data.enforcement_label;
-  $('integration-status').textContent = live ? offline ? 'OFFLINE TEST TRANSPORT · no platform request' : `Connectivity ${data.armoriq.connectivity} · Registration ${data.armoriq.registration}` : 'Not connected · local mock only';
+  $('integration-status').textContent = publicDemo
+    ? data.armoriq_evidence?.status === 'VERIFIED' ? 'Cloud verified · historical SDK-only Allow' : 'Cloud evidence UNVERIFIED'
+    : live ? offline ? 'OFFLINE TEST TRANSPORT · no platform request' : `Connectivity ${data.armoriq.connectivity} · Registration ${data.armoriq.registration}` : 'Not connected · local mock only';
   $('policy-lab-label').textContent = offline ? 'OFFLINE POLICY FIXTURE' : sdkOnly ? 'HISTORICAL PLATFORM REFERENCE' : live ? 'LIVE POLICY BOUNDARY' : 'LOCAL MOCK POLICY LAB';
   $('policy-origin-label').textContent = offline ? 'OFFLINE TEST MODE · NO LIVE PLATFORM REQUEST' : sdkOnly ? 'HISTORICAL ARMORIQ REFERENCE AVAILABLE ON REQUEST' : live ? 'POLICY PROBE REQUIRES AN EXPLICIT OPERATOR CLICK' : 'LOCAL MOCK EVIDENCE · NOT ARMORIQ';
   $('sdk-control-description').textContent = sdkOnly ? 'Explicit, ephemeral preparation. No business write.' : 'Not used by the current execution path.';

@@ -208,6 +208,20 @@ def test_no_private_capability_or_state_in_public_content(public, root):
         token = (path / "capability").read_text("ascii")
         assert token not in html and token not in json.dumps(status)
     evidence = public.get("/api/demo/evidence").json()
-    assert evidence["historical"] is True and evidence["current_execution"] == "SIMULATION"
+    assert evidence["current_execution"] == "SIMULATION"
+    assert evidence["integration"]["status"] == "UNVERIFIED"
     assert public.get("/.runtime/identity.json").status_code == 404
     assert "frame-ancestors 'none'" in public.get("/").headers["content-security-policy"]
+
+
+def test_public_evidence_route_is_read_only_and_never_changes_mock_mode(public):
+    status = public.get("/api/status").json()
+    assert status["enforcement"] == "MOCK"
+    assert status["execution_path"] == "mock"
+    assert status["armoriq_evidence"]["status"] == "UNVERIFIED"
+    evidence = public.get("/api/demo/evidence").json()
+    assert evidence["current_execution"] == "SIMULATION"
+    assert evidence["current_enforcement"] == "MOCK"
+    assert evidence["integration"]["evidence"] is None
+    assert evidence["integration"]["historical_denial"]["date_utc"] == "2026-10-11"
+    assert public.post("/api/demo/evidence", json={}).status_code == 403

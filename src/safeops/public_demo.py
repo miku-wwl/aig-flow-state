@@ -25,23 +25,10 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from safeops.configuration import Settings
 from safeops.integration.runtime_composition import private_directory, provision
 from safeops.main import STATIC, create_app
+from safeops.public_evidence import public_evidence_payload
 
 COOKIE = "__Host-aegis-demo"
 SESSION_AGE = 6 * 86400
-HISTORY = [
-    {
-        "label": "Historical genuine remote ArmorIQ Allow",
-        "detail": (
-            "Phase 2.4 SDK-only tool-policy Allow; local integrity and Core receipt are separate."
-        ),
-        "source": "https://github.com/miku-wwl/aig-flow-state/blob/main/docs/phase24-application-e2e-report.md",
-    },
-    {
-        "label": "Historical genuine remote ArmorIQ Deny / Blocked",
-        "detail": "Preserved Phase 2.2 purge denial. No fresh canary is dispatched by this demo.",
-        "source": "https://github.com/miku-wwl/aig-flow-state/blob/main/docs/phase22-sdk-only-feasibility.md",
-    },
-]
 UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 ALLOWED = {
     "GET": [
@@ -109,7 +96,9 @@ def denied(code, status=403):
 
 
 class PublicSandbox:
-    def __init__(self, root, origin, *, provider="deepseek", provider_factory=None):
+    def __init__(
+        self, root, origin, *, provider="deepseek", provider_factory=None, evidence_path=None
+    ):
         parsed = urlsplit(origin)
         if (
             parsed.scheme != "https"
@@ -128,7 +117,13 @@ class PublicSandbox:
         if len(self.key) != 32 or not (self.root / "demo.sqlite3").is_file():
             raise ValueError("Explicitly initialize new public sandbox state once")
         self.provider, self.provider_factory = provider, provider_factory
+        self.evidence_path = Path(
+            evidence_path or "/etc/aegis-relay-public/public-evidence.json"
+        )
         self.locks, self.planning = {}, asyncio.Lock()
+
+    def evidence(self):
+        return public_evidence_payload(self.evidence_path)
 
     def digest(self, text):
         return hmac.new(self.key, text.encode(), hashlib.sha256).hexdigest()
@@ -213,7 +208,9 @@ class PublicSandbox:
         if request.url.path == "/api/status":
             data = result.json()
             data.update(
-                public_demo=True, demo_csrf=self.session(request)[1], historical_evidence=HISTORY
+                public_demo=True,
+                demo_csrf=self.session(request)[1],
+                armoriq_evidence=self.evidence(),
             )
             data["enforcement_label"] = (
                 "PUBLIC SIMULATION — synthetic local effects; no ArmorIQ requests"
@@ -243,8 +240,13 @@ class PublicSandbox:
                 {"status": "ok", "product": "Aegis Relay", "public_demo": True, "simulation": True}
             )
         if request.method == "GET" and path == "/api/demo/evidence":
+            evidence = self.evidence()
             return JSONResponse(
-                {"historical": True, "current_execution": "SIMULATION", "evidence": HISTORY}
+                {
+                    "current_execution": "SIMULATION",
+                    "current_enforcement": "MOCK",
+                    "integration": evidence,
+                }
             )
         session = self.session(request)
         if request.method == "GET" and path == "/api/status" and not session:
@@ -259,7 +261,7 @@ class PublicSandbox:
                         "model": "deepseek-flash" if self.provider == "deepseek" else None,
                     },
                     "enforcement_label": "PUBLIC SIMULATION — start an isolated demo session",
-                    "historical_evidence": HISTORY,
+                    "armoriq_evidence": self.evidence(),
                 }
             )
         if request.method not in {"GET", "POST"}:
@@ -309,8 +311,16 @@ class PublicSandbox:
             return await self.forward(request, sid, bytes(raw))
 
 
-def create_public_app(root, origin, *, provider="deepseek", provider_factory=None):
-    sandbox = PublicSandbox(root, origin, provider=provider, provider_factory=provider_factory)
+def create_public_app(
+    root, origin, *, provider="deepseek", provider_factory=None, evidence_path=None
+):
+    sandbox = PublicSandbox(
+        root,
+        origin,
+        provider=provider,
+        provider_factory=provider_factory,
+        evidence_path=evidence_path,
+    )
 
     @asynccontextmanager
     async def lifespan(app):

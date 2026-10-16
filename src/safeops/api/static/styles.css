@@ -358,3 +358,33 @@ footer { padding: 18px 0 0; color: var(--subtle); font-size: 10px; text-align: c
 #public-history { margin-top: 16px; }
 #public-history a { color: #65d9d1; overflow-wrap: anywhere; }
 #public-history-links>p { border-top: 1px solid #2d3b4c; padding-top: 12px; }
+
+.cloud-evidence-card { margin-bottom: 18px; border-color: #2d6655; background: linear-gradient(125deg, #14231f, #151b24 62%); }
+.cloud-evidence-heading { align-items: center; margin-bottom: 5px; }
+.cloud-evidence-heading h2 { margin: 0; font-size: clamp(17px, 2vw, 22px); }
+.cloud-evidence-heading .evidence-status { padding: 6px 10px; font-size: 10px; }
+.cloud-evidence-heading .evidence-status[data-state="verified"] { border-color: #28634e; background: #14241f; color: var(--green); }
+.cloud-evidence-heading .evidence-status[data-state="unknown"] { border-color: #795d34; background: #282116; color: var(--amber); }
+.cloud-evidence-message { margin: 8px 0 13px; color: #b9c8c5; font-size: 12px; line-height: 1.5; }
+.cloud-evidence-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.cloud-evidence-grid>div { min-width: 0; display: grid; gap: 5px; padding: 10px; border: 1px solid #2a3e3c; border-radius: 8px; background: #101a1b; }
+.cloud-evidence-grid strong { overflow-wrap: anywhere; color: #daf0e5; font-size: 11px; font-weight: 650; }
+.cloud-current-mode { margin: 12px 0 0; color: #b8c6cf; font-size: 11px; line-height: 1.5; }
+.cloud-current-mode strong { color: #f2c978; }
+.cloud-evidence-details { margin-top: 11px; color: #71d8cb; font-size: 11px; }
+.cloud-evidence-details summary { cursor: pointer; }
+.cloud-evidence-refs { display: grid; grid-template-columns: 155px minmax(0, 1fr); gap: 5px 10px; padding: 10px; margin: 8px 0 0; border-radius: 7px; background: #101720; }
+.cloud-evidence-refs dt { color: var(--muted); }
+.cloud-evidence-refs dd { min-width: 0; margin: 0; color: #d5e2e5; font: 10px/1.45 Consolas, monospace; overflow-wrap: anywhere; }
+.historical-denial { display: grid; grid-template-columns: minmax(0, 1fr) 2fr auto; align-items: center; gap: 8px 14px; padding: 10px 11px; margin-top: 13px; border: 1px solid #64522e; border-radius: 8px; background: #211e16; }
+.historical-denial .eyebrow { margin-bottom: 3px; color: #d6b866; }
+.historical-denial strong { color: #f0dfb2; font-size: 11px; overflow-wrap: anywhere; }
+.historical-denial p { margin: 0; color: #c3b99f; font-size: 10px; line-height: 1.45; }
+.historical-denial a { color: #75d6cd; font-size: 10px; overflow-wrap: anywhere; }
+
+@media (max-width: 680px) {
+  .cloud-evidence-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cloud-evidence-refs { grid-template-columns: 1fr; gap: 2px; }
+  .cloud-evidence-refs dd { margin-bottom: 6px; }
+  .historical-denial { grid-template-columns: 1fr; align-items: start; }
+}
