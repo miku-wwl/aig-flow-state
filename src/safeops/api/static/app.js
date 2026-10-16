@@ -1,12 +1,12 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-let capability = '', run = null, action = null, lastExecution = null, busy = false, scope = null;
-let sdkOnly = false, sdkStage = null, executionPath = 'unknown', statusData = null;
-let businessRecords = [], businessRecordsLoaded = false, policyEvidence = null;
+let capability = '', run = null, action = null, busy = false, scope = null;
+let sdkOnly = false, sdkStage = null, executionPath = 'unknown';
+let businessRecords = [], businessRecordsLoaded = false;
 let publicDemo = false, demoCsrf = '';
 
-const buttons = ['generate','approve','reject','admit','authorize','prepare-sdk','execute','try-unauthorized','replay','restore','refresh-records','policy-test'];
+const buttons = ['generate','approve','reject','admit','authorize','prepare-sdk','execute'];
 const stageLabels = {complete:'Complete',current:'Current',pending:'Pending',failed:'Failed',unknown:'Unknown','not-applicable':'N/A'};
 
 function controls() {
@@ -19,13 +19,6 @@ function controls() {
   $('execute').disabled ||= action?.state !== 'Authorized';
   $('prepare-sdk').disabled ||= !sdkOnly || action?.state !== 'Authorized' || !['MISSING','EXPIRED'].includes(sdkStage?.status);
   $('execute').disabled ||= sdkOnly && (sdkStage?.status !== 'READY' || Date.now()/1000 >= sdkStage.expires_at);
-  $('try-unauthorized').disabled ||= action?.state !== 'Pending';
-  $('replay').disabled ||= !lastExecution;
-  $('copy-run').disabled = !run;
-  $('copy-action').disabled = !action;
-  const receiptReference = action?.result?.receipt_reference;
-  $('copy-receipt').disabled = !receiptReference;
-  $('copy-success-receipt').disabled = !receiptReference || action?.state !== 'Succeeded';
   $('workspace-state').textContent = publicDemo ? unlocked ? 'SANDBOX READY' : 'SANDBOX PAUSED' : capability ? 'WORKSPACE UNLOCKED' : 'WORKSPACE LOCKED';
   $('workspace-state').dataset.unlocked = String(unlocked);
 }
@@ -61,11 +54,9 @@ function renderRun() {
   $('run-state').textContent = run?.state || 'No Run selected';
   $('run-state').dataset.state = run?.state || 'empty';
   $('run-version').textContent = run ? `Version ${run.version}` : '';
-  $('run-id').textContent = run ? `Run ${compactId(run.run_id)}` : 'No Run selected';
+  $('run-id').textContent = run ? `Run ID: ${run.run_id}` : 'No Run selected';
   $('run-id').title = run?.run_id || '';
   $('plan-json-details').hidden = !run;
-  $('run-identifier-row').hidden = !run;
-  $('restore-id').value = run?.run_id || '';
   $('plan-json').textContent = run?.plan ? JSON.stringify(run.plan,null,2) : 'No validated Plan.';
   $('full-identifiers').textContent = [run && `Run ID: ${run.run_id}`, action && `Action ID: ${action.action_id}`, action?.result?.receipt_reference && `Receipt: ${action.result.receipt_reference}`].filter(Boolean).join('\n');
   $('validation').textContent = run?.plan ? `Validated by the shared Runtime · Risk: ${run.risk_class}` : run?.error ? `${run.error.code}: ${run.error.message}` : 'Generate a Plan to see validation and risk.';
@@ -99,6 +90,7 @@ function renderSuccess() {
   $('success-summary').hidden = !succeeded;
   if (!succeeded) return;
   $('success-title').textContent = publicDemo ? 'Simulated handoff: Succeeded' : 'Core Action: Succeeded';
+  $('success-policy-row').hidden = publicDemo;
   const step = run?.plan?.steps?.[0];
   const args = step?.arguments || {};
   const receipt = action?.result?.receipt_reference || '';
@@ -143,14 +135,12 @@ function renderCloudEvidence(bundle) {
   $('cloud-evidence-message').textContent = verified
     ? 'ArmorIQ returned an explicit Allow. The Core Action succeeded, one durable handoff matched its receipt, and the audit was acknowledged on ' + when + ' UTC.'
     : 'Persisted Run, Action, policy, receipt and audit evidence is missing or inconsistent. No Allow is claimed.';
-  set('cloud-evidence-path', verified ? 'SDK-only · REAL_PLATFORM' : 'Not verified');
   set('cloud-evidence-decision', verified ? 'Allow · HTTP ' + evidence.enforcement_http_status : 'Not verified');
   set('cloud-evidence-policy', verified ? 'Registered policy matched' : 'Not verified');
   set('cloud-evidence-action', verified ? 'Succeeded · ' + evidence.tool_name + ' v' + evidence.tool_version : 'Not verified');
   set('cloud-evidence-effect', verified ? 'Exactly 1 · synthetic handoff' : 'Not verified');
   set('cloud-evidence-receipt', verified ? 'Matched durable receipt' : 'Not verified');
   set('cloud-evidence-audit', verified ? 'Acknowledged · HTTP ' + evidence.audit_http_status : 'Not verified');
-  set('cloud-evidence-time', when + (verified ? ' UTC' : ''));
   set('hero-evidence-status', verified ? 'ArmorIQ Cloud · Verified' : 'ArmorIQ Cloud · Unverified');
   set('hero-evidence-summary', verified
     ? 'Real SDK-only Allow confirmed. This is a previously completed Azure execution.'
@@ -173,21 +163,6 @@ function renderCloudEvidence(bundle) {
       dt.textContent = label; dd.textContent = value; $('cloud-evidence-refs').append(dt, dd);
     }
   }
-  const denial = bundle?.historical_denial;
-  const denialVerified = denial?.status === 'BLOCKED'
-    && denial?.operation === 'purge_incident_history'
-    && denial?.reason === 'tool_not_in_allowlist'
-    && denial?.date_utc === '2026-10-11'
-    && typeof denial?.request_id === 'string'
-    && denial?.source?.startsWith('https://github.com/miku-wwl/aig-flow-state/blob/main/docs/phase22-sdk-only-feasibility.md');
-  $('historical-denial').hidden = !denialVerified;
-  set('historical-denial-title', denialVerified
-    ? `${denial.status} · ${denial.operation} · ${denial.reason}`
-    : 'Historical Blocked details unavailable');
-  set('historical-denial-detail', denialVerified
-    ? `${denial.origin}; ${denial.date_utc} UTC. Request ${denial.request_id}. This separate historical Block is not from the Azure Allow Action above.`
-    : 'The documented historical denial record is unavailable.');
-  if (denialVerified) $('historical-denial-source').href = denial.source;
   return verified;
 }
 
@@ -201,123 +176,37 @@ function setStep(key, state) {
 }
 
 function workflowStates() {
-  const terminalAfterAuthorization = ['Authorized','Executing','Succeeded','Failed','Unknown'];
-  let preparation = 'not-applicable';
-  if (sdkOnly) {
-    if (['READY','CONSUMED'].includes(sdkStage?.status)) preparation = 'complete';
-    // A terminal stage retains its prepared Plan ID after execution and restoration.
-    else if (sdkStage?.status === 'TERMINAL_OR_EXECUTING' && sdkStage.plan_id) preparation = 'complete';
-    else if (['INVALID','EXPIRED','PREPARATION_FAILED'].includes(sdkStage?.status)) preparation = 'failed';
-    else if (action?.state === 'Authorized') preparation = 'current';
-    else preparation = 'pending';
-  }
-  return {
-    incident: run ? 'complete' : 'current',
-    plan: run?.plan ? 'complete' : run?.error ? 'failed' : 'pending',
-    approval: run?.state === 'Approved' ? 'complete' : run?.state === 'Rejected' ? 'failed' : run?.state === 'AwaitingApproval' ? 'current' : 'pending',
-    admission: action ? 'complete' : run?.state === 'Approved' ? 'current' : 'pending',
-    authorization: action?.state === 'Pending' ? 'current' : terminalAfterAuthorization.includes(action?.state) ? 'complete' : 'pending',
-    preparation,
-    execution: action?.state === 'Succeeded' ? 'complete' : action?.state === 'Failed' ? 'failed' : action?.state === 'Unknown' ? 'unknown' : action?.state === 'Executing' || action?.state === 'Authorized' && (!sdkOnly || sdkStage?.status === 'READY') ? 'current' : 'pending',
-    receipt: action?.result?.receipt_reference ? 'complete' : action?.state === 'Unknown' ? 'unknown' : action?.state === 'Failed' ? 'failed' : 'pending',
-  };
-}
-
-function evidenceState(status) { return stageLabels[status] ? status : 'unknown'; }
-
-function timelineEntry(index, title, state, detail) {
-  const item = document.createElement('li'); item.className = 'evidence-entry'; item.dataset.state = state;
-  const number = document.createElement('span'); number.className = 'evidence-index'; number.textContent = String(index).padStart(2,'0');
-  const copy = document.createElement('div'); copy.className = 'evidence-copy';
-  const heading = document.createElement('strong'); heading.textContent = title;
-  const description = document.createElement('p'); description.textContent = detail;
-  const badge = document.createElement('span'); badge.className = 'evidence-status'; badge.textContent = stageLabels[state] || 'Not available';
-  copy.append(heading,description); item.append(number,copy,badge); return item;
-}
-
-function renderTimeline() {
-  const items = [];
-  const planState = run?.plan ? 'complete' : run?.error ? 'failed' : 'pending';
-  items.push(['Plan validated',planState,run?.plan ? `Shared Runtime validation · Risk ${run.risk_class}` : run?.error ? `${run.error.code}: ${run.error.message}` : 'No validated Plan loaded.']);
-
-  const approvalState = run?.state === 'Approved' ? 'complete' : run?.state === 'Rejected' || run?.state === 'PlanRejected' ? 'failed' : run?.state === 'AwaitingApproval' ? 'current' : 'pending';
-  const approvalText = run?.state === 'Approved' ? `Human decision recorded · current approved Run version ${run.version}.` : run?.state === 'Rejected' ? 'Plan rejected; no Action was admitted.' : run?.state === 'AwaitingApproval' ? 'Awaiting an explicit decision on this exact Plan.' : 'No approval decision recorded.';
-  items.push(['Human approval',approvalState,approvalText]);
-
-  items.push(['Action admission',action ? 'complete' : run?.state === 'Approved' ? 'current' : 'pending',action ? `Durable Action ${compactId(action.action_id)} · ${action.state}.` : run?.state === 'Approved' ? 'Approved Plan can be admitted as a separate step.' : 'No Action admitted.']);
   const authorized = ['Authorized','Executing','Succeeded','Failed','Unknown'].includes(action?.state);
-  items.push(['Independent authorization',action?.state === 'Pending' ? 'current' : authorized ? 'complete' : 'pending',action?.state === 'Pending' ? 'Action is Pending; independent authorization is required.' : authorized ? `Action state confirms authorization preceded execution · ${action.state}.` : 'No authorization recorded.']);
-
-  let prepState = 'not-applicable', prepText = `Not required for the ${executionPath === 'unknown' ? 'current' : executionPath.toUpperCase()} execution path.`;
-  if (sdkOnly) {
-    prepState = sdkStage?.status === 'READY' || sdkStage?.status === 'CONSUMED' || sdkStage?.status === 'TERMINAL_OR_EXECUTING' && sdkStage.plan_id ? 'complete' : ['INVALID','EXPIRED','PREPARATION_FAILED'].includes(sdkStage?.status) ? 'failed' : action?.state === 'Authorized' ? 'current' : 'pending';
-    prepText = sdkStage ? `Server-reported SDK stage: ${sdkStage.status}${sdkStage.expires_at ? ` · Expires ${new Date(sdkStage.expires_at*1000).toISOString()}` : ''}.` : action ? 'SDK stage has not been read or prepared.' : 'Requires an exact Authorized Action.';
-  }
-  items.push(['SDK preparation',prepState,prepText]);
-
-  const policy = sdkStage?.policy;
-  let policyState = executionPath === 'mock' ? 'not-applicable' : 'pending';
-  let policyText = executionPath === 'mock' ? 'No remote policy request is made in LOCAL / MOCK mode.' : 'No Action-specific remote policy response is available yet.';
-  if (policy) {
-    policyState = policy.explicit_allow_confirmed === true ? 'complete' : /block|deny/i.test(policy.action || '') ? 'failed' : 'unknown';
-    policyText = `${policy.transport === 'OFFLINE_TEST' ? 'Offline SDK fixture' : 'ArmorIQ remote'} · ${policy.action || 'decision unconfirmed'} · Explicit Allow ${policy.explicit_allow_confirmed === true ? 'confirmed' : 'not confirmed'} · Request ${compactId(policy.server_request_id || '')}.`;
-  } else if (executionPath === 'proxy') {
-    policyState = 'unknown'; policyText = 'The current API does not expose a correlated policy decision for this Action.';
-  }
-  items.push(['ArmorIQ remote policy decision',policyState,policyText]);
-
-  let permitState = executionPath === 'mock' ? 'not-applicable' : 'unknown';
-  let permitText = executionPath === 'mock' ? 'No SDK permit is used in the mock path.' : 'A separate consumer permit-validation event is not exposed by the status API.';
-  if (sdkOnly && sdkStage?.audit?.diagnostics?.execution?.late_permit_verified === true) {
-    permitState = 'complete'; permitText = 'Consumer execution diagnostics confirm the late signed dispatch permit was verified.';
-  } else if (sdkOnly && sdkStage?.status === 'READY') {
-    permitState = 'pending'; permitText = 'The exact Authorized SDK stage is READY. Execution-time permit verification has not yet been reported.';
-  } else if (sdkOnly && sdkStage?.status === 'CONSUMED') {
-    permitState = 'unknown'; permitText = 'The prepared stage is consumed; no separate permit-validation trace is returned.';
-  }
-  items.push(['Consumer permit / argument validation',permitState,permitText]);
-
-  const executionState = action?.state === 'Succeeded' ? 'complete' : action?.state === 'Failed' ? 'failed' : action?.state === 'Unknown' ? 'unknown' : action?.state === 'Executing' || action?.state === 'Authorized' && (!sdkOnly || sdkStage?.status === 'READY') ? 'current' : 'pending';
-  const executionText = action?.state === 'Authorized' ? 'Authorization is recorded; waiting for an explicit Execute Once action.' : action ? `Core Action state: ${action.state}. ${action.state === 'Unknown' ? 'Outcome remains ambiguous; no automatic retry.' : ''}` : 'Execution has not been requested.';
-  items.push(['Action execution result',executionState,executionText]);
+  const stageReady = !sdkOnly || ['READY','CONSUMED'].includes(sdkStage?.status)
+    || sdkStage?.status === 'TERMINAL_OR_EXECUTING' && !!sdkStage.plan_id;
+  const executionState = action?.state === 'Succeeded' ? 'complete'
+    : action?.state === 'Failed' ? 'failed'
+      : action?.state === 'Unknown' ? 'unknown'
+        : action?.state === 'Executing' ? 'current'
+          : action?.state === 'Authorized' && stageReady ? 'current' : 'pending';
   const receipt = action?.result?.receipt_reference;
-  const receiptState = receipt ? 'complete' : action?.state === 'Unknown' ? 'unknown' : action?.state === 'Failed' ? 'failed' : 'pending';
-  items.push(['Durable receipt',receiptState,receipt ? `Receipt reference ${compactId(receipt)}.` : action?.state === 'Unknown' ? 'No receipt is confirmed for this Unknown outcome.' : 'No durable receipt is available yet.']);
-
-  const audit = sdkStage?.audit;
-  let auditState = executionPath === 'sdk-only' ? 'pending' : 'not-applicable';
-  let auditText = executionPath === 'sdk-only' ? 'No audit report is recorded for this Action yet.' : 'Audit reporting detail is not available in this execution path.';
-  if (sdkStage?.audit_storage === 'UNAVAILABLE') { auditState = 'unknown'; auditText = 'Audit storage is unavailable; Core state and receipt remain separate.'; }
-  else if (audit) {
-    const auditStatus = audit.status || audit.event_type || 'Recorded';
-    auditState = auditStatus === 'SDK_AUDIT_POST_ACKNOWLEDGED' ? 'complete' : /UNVERIFIED|FAILED/i.test(auditStatus) ? 'unknown' : 'complete';
-    auditText = `Backend audit status: ${auditStatus}.`;
-  } else if (sdkOnly && action && ['Succeeded','Failed','Unknown'].includes(action.state)) {
-    auditState = 'unknown'; auditText = 'Terminal Action is visible; no audit event is returned for this Action.';
-  }
-  items.push(['Audit reporting status',auditState,auditText]);
-
-  const list = $('timeline'); list.replaceChildren();
-  items.forEach((entry,index) => list.append(timelineEntry(index+1,...entry)));
+  return {
+    plan: run?.plan ? 'complete' : run?.error ? 'failed' : 'pending',
+    approval: run?.state === 'Approved' ? 'complete' : ['Rejected','PlanRejected'].includes(run?.state) ? 'failed' : run?.state === 'AwaitingApproval' ? 'current' : 'pending',
+    admission: action ? 'complete' : run?.state === 'Approved' ? 'current' : 'pending',
+    authorization: action?.state === 'Pending' ? 'current' : authorized ? 'complete' : 'pending',
+    execution: executionState,
+    receipt: receipt ? 'complete' : action?.state === 'Unknown' ? 'unknown' : action?.state === 'Failed' ? 'failed' : 'pending',
+  };
 }
 
 function renderPresentation() {
   const states = workflowStates();
   for (const [key,state] of Object.entries(states)) setStep(key,state);
-  renderTimeline();
   renderSuccess();
 }
 
 function renderAction() {
   $('action-state').textContent = action?.state || 'No Action admitted';
   $('action-state').dataset.state = action?.state || 'empty';
-  $('action-id').textContent = action ? `Action ${compactId(action.action_id)} · v${action.version}` : '—';
-  $('action-id').title = action?.action_id || '';
-  $('receipt').textContent = compactId(action?.result?.receipt_reference || '');
-  $('receipt').title = action?.result?.receipt_reference || '';
   $('action-json').textContent = action ? JSON.stringify(action,null,2) : 'No Action yet.';
   $('full-identifiers').textContent = [run && `Run ID: ${run.run_id}`, action && `Action ID: ${action.action_id}`, action?.result?.receipt_reference && `Receipt: ${action.result.receipt_reference}`].filter(Boolean).join('\n');
-  const explanations = {Pending:'Approval is recorded. Independent authorization is still required.',Authorized:sdkOnly ? 'Authorization is recorded. Prepare the SDK stage explicitly, then execute once.' : 'Authorization is recorded. Execute only as an explicit operator action.',Succeeded:'Backend confirms success. Match the durable receipt with the business record below.',Failed:'Backend reports a confirmed failure. Inspect available policy evidence.',Unknown:'Outcome unknown: a handoff may exist. No automatic retry or redispatch is permitted.',Executing:'Backend execution is in progress; refresh only reads state.'};
+  const explanations = {Pending:'Plan approval is recorded. Independent authorization is still required.',Authorized:sdkOnly ? 'Authorization is recorded. Prepare the SDK stage explicitly, then execute once.' : 'Authorization is recorded. Execute only as an explicit operator action.',Succeeded:'Backend confirmed the Action and durable receipt.',Failed:'Backend reports a confirmed failure. No success is claimed.',Unknown:'Outcome unknown: a handoff may exist. No automatic retry or redispatch is permitted.',Executing:'Backend execution is in progress; refresh only reads state.'};
   $('action-message').textContent = explanations[action?.state] || 'Awaiting your review.';
   renderPresentation();
   controls();
@@ -348,41 +237,30 @@ async function readStage() {
 async function records() {
   const {data} = await api('/api/handoffs');
   businessRecords = data.records; businessRecordsLoaded = true;
-  $('records').replaceChildren();
-  if (!data.records.length) { const p=document.createElement('p'); p.className='empty'; p.textContent=publicDemo ? 'No simulated handoffs in this sandbox yet.' : 'No handoff records yet.'; $('records').append(p); }
-  data.records.forEach(record => {
-    const item=document.createElement('article'); item.className='record'; item.dataset.receipt=record.receipt_reference;
-    [['strong',record.incident_id + ' · ' + record.summary],['p',record.handoff_note],['p','Receipt ' + record.receipt_reference],['p','Effect ' + record.effect_key + ' · ' + record.created_at]].forEach(([tag,text],index) => {const child=document.createElement(tag); child.textContent=text; if(index>=2)child.className='identifier'; item.append(child);}); $('records').append(item);
-  });
-  const evidence = await api('/api/policy/evidence');
-  policyEvidence = evidence.data;
-  const currentEvent = action ? evidence.data.events.filter(event => event.action_id === action.action_id).at(-1) : null;
-  $('live-evidence').textContent = evidence.data.mode === 'LIVE' && currentEvent ? `${currentEvent.status || currentEvent.event_type || 'Audit event recorded'} · Action ${compactId(currentEvent.action_id || '')} · Plan ${compactId(currentEvent.plan_id || '')} · Receipt ${compactId(currentEvent.receipt_reference || '')}` : '';
-  renderPresentation();
+  renderSuccess();
 }
 
 async function loadRun(id) {
   const {data} = await api('/api/runs/' + encodeURIComponent(id)); run=data;
   $('intent').value = run.intent.text;
   localStorage.setItem('safeops-run-' + scope,run.run_id); renderRun();
-  const actions = await api(`/api/runs/${run.run_id}/actions`); action=actions.data.actions[0] || null; lastExecution=null; renderAction(); await readStage();
+  const actions = await api(`/api/runs/${run.run_id}/actions`); action=actions.data.actions[0] || null; renderAction(); await readStage();
 }
 
 async function updateStatus() {
-  const {data} = await api('/api/status'); statusData=data; scope=data.execution_scope;
+  const {data} = await api('/api/status'); scope=data.execution_scope;
   publicDemo = data.public_demo === true;
   demoCsrf = publicDemo ? data.demo_csrf || '' : '';
-  $('public-banner').hidden = !publicDemo;
   $('playground-disclosure').hidden = !publicDemo;
   $('cloud-evidence').hidden = !publicDemo;
   $('start-demo').hidden = !publicDemo;
   $('capability-file').parentElement.hidden = publicDemo;
   $('capability-file').disabled = publicDemo;
+  $('lock').hidden = publicDemo;
   const cloudVerified = renderCloudEvidence(data.armoriq_evidence);
   if (publicDemo) {
     $('access-title').textContent = 'Isolated sandbox session';
-    $('capability-status').textContent = 'Start or pause your private demo session. Operator credentials are never accepted here.';
-    $('lock').textContent = 'Pause sandbox';
+    $('capability-status').textContent = 'Start a private demo session to explore the governed workflow.';
     $('start-demo').textContent = 'Start sandbox session';
     $('intent').maxLength = 1500;
   } else {
@@ -413,14 +291,8 @@ async function updateStatus() {
   $('integration-detail').textContent = publicDemo
     ? cloudVerified ? 'Real SDK-only Allow confirmed' : 'Evidence unavailable · no Allow claimed'
     : live ? offline ? 'No platform request was made' : 'Configured live enforcement path' : 'This runtime uses local simulated enforcement';
-  $('policy-lab-label').textContent = offline ? 'OFFLINE POLICY FIXTURE' : sdkOnly ? 'HISTORICAL PLATFORM REFERENCE' : live ? 'LIVE POLICY BOUNDARY' : 'LOCAL MOCK POLICY LAB';
-  $('policy-origin-label').textContent = offline ? 'OFFLINE TEST MODE · NO LIVE PLATFORM REQUEST' : sdkOnly ? 'HISTORICAL ARMORIQ REFERENCE AVAILABLE ON REQUEST' : live ? 'POLICY PROBE REQUIRES AN EXPLICIT OPERATOR CLICK' : 'LOCAL MOCK EVIDENCE · NOT ARMORIQ';
+  $('sdk-controls').hidden = !sdkOnly;
   $('sdk-control-description').textContent = sdkOnly ? 'Explicit, ephemeral preparation. No business write.' : 'Not used by the current execution path.';
-  $('policy-lab-description').textContent = sdkOnly ? 'Load the preserved Phase 2.2 denial reference. The backend returns its historical ID without a new remote request.' : offline ? 'Uses a deterministic offline transport. It cannot qualify live platform enforcement.' : live ? 'The explicit probe uses the configured live boundary; it is never called on page load.' : 'Runs a deterministic local policy check. No ArmorIQ call and no Core Action.';
-  $('policy-test').textContent = sdkOnly ? 'Load historical denial reference' : offline ? 'Run offline policy fixture' : live ? 'Run explicit policy denial probe' : 'Test local mock denial';
-  $('mode-footer').textContent = publicDemo
-    ? 'Agentic Intent Gate v0.1.0 · Public sandbox · simulated effects · verified cloud record is read only'
-    : 'Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · ' + (offline ? 'Offline SDK transport — no live qualification' : live ? 'Live ArmorIQ path — backend status and evidence only' : 'Local mock execution path');
   renderPresentation();
   controls();
   return data;
@@ -432,20 +304,6 @@ $('start-demo').onclick = () => perform(async () => {
   const remembered=localStorage.getItem('safeops-run-' + scope);
   if (remembered) await loadRun(remembered);
 });
-
-async function copyValue(value, label) {
-  if (!value) return;
-  try {
-    await navigator.clipboard.writeText(value);
-    message('notice',`${label} copied.`);
-  } catch {
-    message('error',`Clipboard access is unavailable. The full ${label.toLowerCase()} remains in the technical details.`);
-  }
-}
-
-$('copy-run').onclick = () => copyValue(run?.run_id,'Full Run ID');
-$('copy-action').onclick = () => copyValue(action?.action_id,'Full Action ID');
-$('copy-receipt').onclick = $('copy-success-receipt').onclick = () => copyValue(action?.result?.receipt_reference,'Full receipt reference');
 
 $('capability-file').addEventListener('change', () => perform(async () => {
   const input=$('capability-file'), file=input.files[0]; if(!file)return;
@@ -459,19 +317,16 @@ $('capability-file').addEventListener('change', () => perform(async () => {
 
 $('lock').onclick = () => {
   demoCsrf='';
-  capability=''; run=null; action=null; lastExecution=null; sdkStage=null; businessRecords=[]; businessRecordsLoaded=false; policyEvidence=null;
-  renderRun(); renderAction(); $('records').replaceChildren(); $('policy-result').textContent='No policy evidence loaded.'; $('live-evidence').textContent='';
+  capability=''; run=null; action=null; sdkStage=null; businessRecords=[]; businessRecordsLoaded=false;
+  renderRun(); renderAction();
   $('capability-status').textContent = publicDemo
     ? 'Sandbox session paused. Start it again to continue. Private operator credentials are never accepted.'
     : 'Workspace locked. Load your private capability file.';
-  const empty = document.createElement('p'); empty.className='empty';
-  empty.textContent = publicDemo ? 'Start an isolated sandbox session to view demo records.' : 'Unlock the workspace to view records.';
-  $('records').append(empty);
   controls();
 };
 
 $('generate').onclick = () => perform(async () => {
-  const {data} = await api('/api/runs',{body:{text:$('intent').value}}); run=data; action=null; lastExecution=null; sdkStage=null;
+  const {data} = await api('/api/runs',{body:{text:$('intent').value}}); run=data; action=null; sdkStage=null;
   localStorage.setItem('safeops-run-' + scope,run.run_id); renderRun(); renderAction(); await readStage();
   const status=await updateStatus();
   if(run.error) { throw new Error(`${run.error.code}: ${run.error.message}${status.provider.last_error ? ' · ' + status.provider.last_error : ''}`); }
@@ -489,35 +344,10 @@ $('prepare-sdk').onclick = () => perform(async () => {
   await readStage(); await updateStatus(); await records(); message('notice','Exact Authorized Action prepared. Execute before expiry; preparation creates no business record.');
 });
 $('execute').onclick = () => perform(async () => {
-  lastExecution={path:`/api/actions/${action.action_id}/execute`,body:{expected_action_version:action.version},key:crypto.randomUUID()};
-  try { const {data}=await api(lastExecution.path,lastExecution); action=data.action; renderAction(); await records(); }
+  const request={body:{expected_action_version:action.version},key:crypto.randomUUID()};
+  try { const {data}=await api(`/api/actions/${action.action_id}/execute`,request); action=data.action; renderAction(); await records(); }
   finally { await readStage(); }
 });
-$('replay').onclick = () => perform(async () => {const {data}=await api(lastExecution.path,lastExecution); action=data.action; renderAction(); await records(); message('notice',data.replayed ? 'Exact request replayed. The durable receipt is unchanged.' : 'Backend execution result received.');});
-$('try-unauthorized').onclick = () => perform(async () => {
-  const {response,data}=await api(`/api/actions/${action.action_id}/execute`,{body:{expected_action_version:action.version},key:crypto.randomUUID(),expectedError:true});
-  if(response.ok)throw new Error('Unexpected allowed execution'); message('error',`${data.error.code}: ${data.error.message} · No business effect.`); await records();
-});
-$('policy-test').onclick = () => perform(async () => {
-  const {data}=await api('/api/policy/test',{body:{operation:'purge_incident_history'},expectedError:true});
-  if (data.source && data.source.startsWith('Historical')) {
-    $('policy-result').textContent = [
-      `Source: ${data.source}`,
-      `Historical request ID: ${data.historical_request_id || 'not available'}`,
-      `Current request status: ${data.status || 'not available'}`,
-      `Core Action created: ${data.core_action_created === true ? 'Yes' : 'No'}`,
-      `Business effect executed: ${data.business_effect_executed === true ? 'Yes' : 'No'}`,
-    ].join('\n');
-    $('policy-origin-label').textContent='HISTORICAL ARMORIQ POLICY DENIAL · NOT THIS RUN';
-  } else {
-    $('policy-result').textContent=JSON.stringify(data,null,2);
-    if (data.mode === 'MOCK') $('policy-origin-label').textContent='LOCAL MOCK POLICY DENIAL · NOT ARMORIQ';
-    else if (data.policy_denial_verified) $('policy-origin-label').textContent='ARMORIQ POLICY DENIAL · BACKEND VERIFIED';
-  }
-  await records();
-});
-$('restore').onclick = () => perform(() => loadRun($('restore-id').value.trim()));
-$('refresh-records').onclick = () => perform(async () => {await records(); await readStage();});
 
 setInterval(() => {
   if (sdkStage?.status === 'READY' && Date.now()/1000 >= sdkStage.expires_at) {

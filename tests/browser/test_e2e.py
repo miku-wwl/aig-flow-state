@@ -48,16 +48,23 @@ def unlock(page, server):
 
 
 def assert_branding(page):
-    expect(page).to_have_title("Aegis Relay — Agent Execution Console")
-    expect(page.locator("h1")).to_have_text("Agent Execution Console")
+    expect(page).to_have_title("Aegis Relay — Govern AI Actions with ArmorIQ")
+    expect(page.locator("h1")).to_have_text("Govern AI Actions with Real ArmorIQ Enforcement")
     expect(page.get_by_role("link", name="Aegis Relay home")).to_be_visible()
     expect(page.locator(".header-tagline")).to_have_text("Trust the intent. Govern the action.")
     expect(page.locator("meta[name='description']")).to_have_attribute(
         "content",
-        "Aegis Relay is a permissioned AI agent execution console for governed incident handoffs.",
+        "Aegis Relay governs AI actions with human approval, genuine ArmorIQ cloud enforcement evidence and verifiable receipts.",
     )
-    expect(page.locator("#workflow-title")).to_have_text("Governed execution path")
-    expect(page.locator("#timeline-title")).to_have_text("Execution timeline")
+    expect(page.locator("#playground-title")).to_have_text("Interactive Governance Demo")
+    expect(page.locator("main > section")).to_have_count(3)
+    expect(page.locator("#playground-disclosure")).to_contain_text(
+        "Sandbox mode: Real AI planning with simulated execution. No new ArmorIQ policy request is sent from this demo."
+    )
+    for obsolete in ["Phase 2.2", "LOCAL MOCK POLICY LAB", "Test local mock denial", "Persisted handoffs"]:
+        expect(page.locator("body")).not_to_contain_text(obsolete)
+    for removed_id in ["historical-denial", "policy-test", "restore-id", "try-unauthorized", "replay", "timeline"]:
+        expect(page.locator(f"#{removed_id}")).to_have_count(0)
     expect(page.locator("body")).not_to_contain_text(re.compile(r"safe[\s_-]*ops\s+agent", re.I))
 
 
@@ -89,13 +96,13 @@ def admit(page):
 
 
 def execute(page):
-    page.locator("#authorize").click()
+    if page.locator("#authorize").is_enabled():
+        page.locator("#authorize").click()
     expect(page.locator("#action-state")).to_have_text("Authorized")
     expect(page.locator('[data-step="authorization"]')).to_have_attribute("data-state", "complete")
     expect(page.locator('[data-step="execution"]')).to_have_attribute("data-state", "current")
     page.locator("#execute").click()
     expect(page.locator("#action-state")).to_have_text("Succeeded")
-    expect(page.locator(".record")).to_have_count(1)
     expect(page.locator("#success-summary")).to_be_visible()
     expect(page.locator("#success-record")).to_contain_text("Matched persisted handoff")
     expect(page.locator('[data-step="execution"]')).to_have_attribute("data-state", "complete")
@@ -108,13 +115,27 @@ def screenshot(page, name):
     page.screenshot(path=str(SCREENSHOTS / name), full_page=True)
 
 
-def test_happy_replay_refresh_and_mock_denial(page, server):
+def test_happy_governance_flow_and_read_only_refresh(page, server):
     generate(page, server)
     screenshot(page, "01-plan-awaiting-approval.png")
+    run_id = page.locator("#run-id").text_content().replace("Run ID: ", "")
     admit(page)
+    assert server.get("/api/handoffs")["records"] == []
+    page.reload()
+    unlock(page, server)
+    expect(page.locator("#action-state")).to_have_text("Pending")
+    expect(page.locator("#authorize")).to_be_enabled()
+    assert server.get("/api/handoffs")["records"] == []
+    page.locator("#authorize").click()
+    expect(page.locator("#action-state")).to_have_text("Authorized")
+    assert server.get("/api/handoffs")["records"] == []
+    page.reload()
+    unlock(page, server)
+    expect(page.locator("#action-state")).to_have_text("Authorized")
+    expect(page.locator("#execute")).to_be_enabled()
+    assert server.get("/api/handoffs")["records"] == []
     execute(page)
-    receipt = page.locator("#receipt").get_attribute("title")
-    run_id = page.locator("#restore-id").input_value()
+    receipt = page.locator("#success-receipt").inner_text()
     action = json.loads(page.locator("#action-json").text_content())
     records = server.get("/api/handoffs")["records"]
     assert records[0]["receipt_reference"] == receipt
@@ -124,26 +145,15 @@ def test_happy_replay_refresh_and_mock_denial(page, server):
         assert db.execute("SELECT receipt_reference FROM handoffs").fetchone()[0] == receipt
     screenshot(page, "02-successful-action-receipt.png")
     assert_branding(page)
-    page.locator("#replay").click()
-    expect(page.locator("#notice")).to_contain_text("receipt is unchanged")
-    assert server.get("/api/handoffs")["records"] == records
-    page.locator("#policy-test").click()
-    expect(page.locator("#policy-result")).to_contain_text("PolicyDenied")
-    expect(page.locator("#policy-result")).to_contain_text('"core_action_created": false')
-    expect(page.locator("#policy-origin-label")).to_have_text(
-        "LOCAL MOCK POLICY DENIAL · NOT ARMORIQ"
-    )
-    screenshot(page, "03-simulated-policy-denial.png")
-    assert_branding(page)
     page.reload()
     expect(page.locator("#generate")).to_be_disabled()
     # Capability is intentionally not persisted; reload it, then refresh performs only reads.
     unlock(page, server)
     expect(page.locator("#action-state")).to_have_text("Succeeded")
-    expect(page.locator("#receipt")).to_have_attribute("title", receipt)
-    expect(page.locator(".record")).to_have_count(1)
+    expect(page.locator("#success-receipt")).to_have_text(receipt)
+    expect(page.locator("#success-record")).to_contain_text("Matched persisted handoff")
     assert server.get("/api/handoffs")["records"] == records
-    screenshot(page, "04-persisted-after-refresh.png")
+    screenshot(page, "03-persisted-after-refresh.png")
     assert_branding(page)
     save_evidence(
         "offline-browser",
@@ -163,15 +173,25 @@ def test_rejected_approval_no_effect(page, server):
     expect(page.locator("#run-state")).to_have_text("Rejected")
     expect(page.locator("#admit")).to_be_disabled()
     assert server.get("/api/handoffs")["records"] == []
-    run_id = page.locator("#restore-id").input_value()
+    run_id = page.locator("#run-id").text_content().replace("Run ID: ", "")
     assert server.get(f"/api/runs/{run_id}/actions")["actions"] == []
 
 
 def test_execution_without_authorization_denied(page, server):
+    from uuid import uuid4
+
     generate(page, server)
     admit(page)
-    page.locator("#try-unauthorized").click()
-    expect(page.locator("#error")).to_contain_text("ACTION_NOT_EXECUTABLE")
+    action = json.loads(page.locator("#action-json").text_content())
+    response = httpx.post(
+        server.url + f"/api/actions/{action['action_id']}/execute",
+        headers=server.headers | {"Idempotency-Key": str(uuid4())},
+        json={"expected_action_version": action["version"]},
+        trust_env=False,
+        timeout=10,
+    )
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "ACTION_NOT_EXECUTABLE"
     expect(page.locator("#action-state")).to_have_text("Pending")
     assert server.get("/api/handoffs")["records"] == []
 
@@ -195,12 +215,31 @@ def test_provider_failure_rendered(page, state, fault, code):
         server.stop()
 
 
+def test_responsive_layout_and_browser_handlers(page, server):
+    page_errors = []
+    console_errors = []
+    page.on("pageerror", lambda error: page_errors.append(str(error)))
+    page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
+    page.goto(server.url)
+    for width, height in [(1920, 1080), (1440, 900), (768, 1024), (390, 844)]:
+        page.set_viewport_size({"width": width, "height": height})
+        expect(page.locator("#hero-title")).to_be_visible()
+        expect(page.locator("#cloud-evidence")).to_have_count(1)
+        overflow = page.evaluate(
+            "({doc: document.documentElement.scrollWidth, body: document.body.scrollWidth, viewport: innerWidth})"
+        )
+        assert overflow["doc"] <= overflow["viewport"], f"horizontal overflow at {width}px: {overflow}"
+        assert overflow["body"] <= overflow["viewport"], f"body overflow at {width}px: {overflow}"
+        assert page_errors == []
+        assert console_errors == []
+
+
 def test_real_process_graceful_restart(page, server):
     generate(page, server)
     admit(page)
     execute(page)
-    receipt = page.locator("#receipt").inner_text()
-    run_id = page.locator("#restore-id").input_value()
+    receipt = page.locator("#success-receipt").inner_text()
+    run_id = page.locator("#run-id").text_content().replace("Run ID: ", "")
     action = json.loads(page.locator("#action-json").text_content())
     before = {
         name: hashlib.sha256((server.state / name).read_bytes()).hexdigest()
@@ -214,7 +253,7 @@ def test_real_process_graceful_restart(page, server):
     assert server.process.pid != previous_pid
     page.reload()
     unlock(page, server)
-    expect(page.locator("#receipt")).to_have_text(receipt)
+    expect(page.locator("#success-receipt")).to_have_text(receipt)
     expect(page.locator("#action-state")).to_have_text("Succeeded")
     assert server.get("/api/handoffs")["records"] == records
     after = {
@@ -247,12 +286,13 @@ def test_unknown_visible_without_redispatch(page, state):
         page.locator("#execute").click()
         expect(page.locator("#action-state")).to_have_text("Unknown")
         expect(page.locator("#action-message")).to_contain_text("No automatic retry")
-        expect(page.locator("#receipt")).to_have_text("—")
-        expect(page.locator(".record")).to_have_count(1)
+        expect(page.locator('[data-step="execution"]')).to_have_attribute("data-state", "unknown")
         records = server.get("/api/handoffs")["records"]
-        page.locator("#replay").click()
-        expect(page.locator("#notice")).to_contain_text("request replayed")
+        assert len(records) == 1
+        page.reload()
+        unlock(page, server)
         expect(page.locator("#action-state")).to_have_text("Unknown")
+        expect(page.locator("#execute")).to_be_disabled()
         assert server.get("/api/handoffs")["records"] == records
         save_evidence(
             "unknown-browser",
@@ -290,9 +330,8 @@ def test_concurrent_real_http_execute_after_browser_authorization(page, server):
     assert all(response.status_code == 200 for response in responses)
     results = [response.json() for response in responses]
     assert sum(result["replayed"] for result in results) == 1
-    page.locator("#restore").click()
+    page.reload()
+    unlock(page, server)
     expect(page.locator("#action-state")).to_have_text("Succeeded")
-    page.locator("#refresh-records").click()
-    expect(page.locator(".record")).to_have_count(1)
     assert len(server.get("/api/handoffs")["records"]) == 1
     save_evidence("concurrent-http", {"requests": 2, "responses": results, "record_count": 1})

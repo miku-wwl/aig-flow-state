@@ -6,8 +6,9 @@
   <meta name="theme-color" content="#10151e">
   <title>Aegis Relay — Govern AI Actions with ArmorIQ</title>
   <meta name="description" content="Aegis Relay governs AI actions with human approval, genuine ArmorIQ cloud enforcement evidence and verifiable receipts.">
-  <link rel="stylesheet" href="/static/styles.css?v=20261017-ui-polish">
-  <script defer src="/static/app.js?v=20261017-ui-polish"></script>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/styles.css?v=20261017-ui-freeze">
+  <script defer src="/static/app.js?v=20261017-ui-freeze"></script>
 </head>
 <body>
   <header class="app-header">
@@ -18,7 +19,7 @@
     <p class="header-tagline">Trust the intent. Govern the action.</p>
     <div class="header-status" aria-label="Runtime status">
       <div class="status-cell integration-cell">
-        <span class="status-label">ARMORIQ INTEGRATION</span>
+        <span class="status-label">ARMORIQ CLOUD</span>
         <strong id="integration-status" class="status-value">Verifying cloud evidence…</strong>
         <small id="integration-detail">Reading persisted Azure record</small>
       </div>
@@ -35,12 +36,11 @@
       <div class="hero-copy">
         <p class="eyebrow">AI AGENT GOVERNANCE · VERIFIED CLOUD ENFORCEMENT</p>
         <h1 id="hero-title">Govern AI Actions with Real ArmorIQ Enforcement</h1>
-        <p class="hero-lead">DeepSeek proposes. Humans approve. ArmorIQ enforces. Every execution is verified with a durable receipt.</p>
+        <p class="hero-lead">DeepSeek proposes. Humans approve. ArmorIQ enforces.</p>
         <div class="hero-actions">
           <a class="button primary hero-primary" href="#cloud-evidence">Explore Verified Execution <span aria-hidden="true">↓</span></a>
           <a class="button quiet hero-secondary" href="#playground">Try Interactive Demo <span aria-hidden="true">→</span></a>
         </div>
-        <p class="hero-footnote">Real cloud evidence is preserved below. The public playground is an isolated simulation.</p>
       </div>
       <aside class="hero-proof" aria-label="Verified ArmorIQ integration status">
         <div class="hero-proof-heading">
@@ -53,196 +53,156 @@
           <div><span>CORE RESULT</span><strong id="hero-evidence-result">Checking…</strong></div>
           <div><span>DURABLE RECEIPT</span><strong id="hero-evidence-receipt">Checking…</strong></div>
         </div>
-        <a href="#cloud-evidence" class="hero-proof-link">View persisted evidence <span aria-hidden="true">↘</span></a>
+        <a href="#cloud-evidence" class="hero-proof-link">View verified evidence <span aria-hidden="true">↘</span></a>
       </aside>
     </section>
 
     <section id="cloud-evidence" class="card cloud-evidence-card" hidden aria-labelledby="cloud-evidence-title">
       <div class="cloud-evidence-heading">
-        <div><p id="cloud-evidence-eyebrow" class="eyebrow">VERIFIED AZURE EXECUTION</p><h2 id="cloud-evidence-title">Verified Cloud Execution</h2><p class="card-subtitle">Real ArmorIQ SDK-only enforcement · Azure</p></div>
-        <div class="cloud-evidence-status-group"><span id="cloud-evidence-provenance" class="provenance-label">Previously completed · Read-only evidence</span><span id="cloud-evidence-status" class="evidence-status">CHECKING</span></div>
+        <div>
+          <p id="cloud-evidence-eyebrow" class="eyebrow">AZURE · REAL ARMORIQ ENFORCEMENT</p>
+          <h2 id="cloud-evidence-title">Verified Cloud Execution</h2>
+          <p class="card-subtitle">Real ArmorIQ SDK-only enforcement on Azure.</p>
+        </div>
+        <div class="cloud-evidence-status-group">
+          <span id="cloud-evidence-provenance" class="provenance-label">Previously completed SDK-only execution · Read-only verified evidence.</span>
+          <span id="cloud-evidence-status" class="evidence-status">CHECKING</span>
+        </div>
       </div>
       <p id="cloud-evidence-message" class="cloud-evidence-message">Loading a sanitized record from the protected Azure SDK-only runtime.</p>
-      <div class="cloud-evidence-grid" aria-label="Azure ArmorIQ execution metrics">
-        <div><span class="status-label">ENFORCEMENT PATH</span><strong id="cloud-evidence-path">Not loaded</strong></div>
-        <div><span class="status-label">REMOTE POLICY</span><strong id="cloud-evidence-decision">Not loaded</strong></div>
+      <div class="cloud-evidence-grid" aria-label="Verified Azure execution evidence">
+        <div><span class="status-label">ARMORIQ REMOTE</span><strong id="cloud-evidence-decision">Not loaded</strong></div>
         <div><span class="status-label">REGISTERED POLICY</span><strong id="cloud-evidence-policy">Not loaded</strong></div>
         <div><span class="status-label">CORE ACTION</span><strong id="cloud-evidence-action">Not loaded</strong></div>
-        <div><span class="status-label">BUSINESS EFFECT</span><strong id="cloud-evidence-effect">Not loaded</strong></div>
+        <div><span class="status-label">SYNTHETIC BUSINESS EFFECT</span><strong id="cloud-evidence-effect">Not loaded</strong></div>
         <div><span class="status-label">DURABLE RECEIPT</span><strong id="cloud-evidence-receipt">Not loaded</strong></div>
         <div><span class="status-label">AUDIT</span><strong id="cloud-evidence-audit">Not loaded</strong></div>
-        <div><span class="status-label">EXECUTED · UTC</span><strong id="cloud-evidence-time">Not loaded</strong></div>
       </div>
-      <p class="cloud-evidence-note"><strong>Provenance:</strong> Previously completed operator execution. This evidence view is read-only and does not trigger another policy request.</p>
       <details id="cloud-evidence-details" class="cloud-evidence-details" hidden>
-        <summary>Technical details and full evidence identifiers</summary>
+        <summary>Technical evidence</summary>
         <dl id="cloud-evidence-refs" class="cloud-evidence-refs"></dl>
       </details>
-      <div id="historical-denial" class="historical-denial" aria-label="Separate historical ArmorIQ denial evidence">
-        <div><p class="eyebrow">SEPARATE HISTORICAL BLOCK · NOT THIS AZURE ACTION</p><strong id="historical-denial-title">Historical Blocked record</strong></div>
-        <p id="historical-denial-detail">Loading the documented Phase 2.2 evidence…</p>
-        <a id="historical-denial-source" href="https://github.com/miku-wwl/aig-flow-state/blob/main/docs/phase22-sdk-only-feasibility.md" target="_blank" rel="noopener noreferrer">Open Phase 2.2 source report</a>
-      </div>
     </section>
 
     <section id="playground" class="playground-section" aria-labelledby="playground-title">
       <header class="playground-heading">
         <div>
-          <p class="eyebrow">TRY THE GOVERNANCE FLOW</p>
-          <h2 id="playground-title">Interactive Governance Playground</h2>
-          <p class="playground-subtitle">Explore real DeepSeek planning, exact human approval, independent authorization, and durable receipts in an isolated sandbox.</p>
+          <p class="eyebrow">AI PLANNING · HUMAN GOVERNANCE</p>
+          <h2 id="playground-title">Interactive Governance Demo</h2>
+          <p class="playground-subtitle">Experience AI planning, human approval, independent authorization and controlled execution.</p>
         </div>
-        <div class="playground-badges">
-          <span id="public-banner" class="sandbox-badge" hidden>SAFE SANDBOX</span>
-          <span id="mode-chip" class="chip" data-mode="mock">SANDBOX</span>
-        </div>
+        <span id="mode-chip" class="chip" data-mode="sandbox">SANDBOX</span>
       </header>
-      <p id="playground-disclosure" class="playground-disclosure"><span class="disclosure-mark" aria-hidden="true">i</span><span><strong>Sandbox execution uses simulated effects.</strong> No new ArmorIQ enforcement request is made from this playground.</span></p>
 
-    <section class="workflow-panel" aria-labelledby="workflow-title">
-      <div class="panel-heading compact-heading">
-        <div><p class="eyebrow">RUN PROGRESS</p><h2 id="workflow-title">Governed execution path</h2></div>
-        <span class="read-only-note">Backend state · read only</span>
-      </div>
-      <ol class="workflow-steps" aria-label="Incident to receipt workflow">
-        <li data-step="incident" data-state="current" aria-current="step"><span class="step-index">01</span><span class="step-name">Incident</span><small class="step-state">Current</small></li>
-        <li data-step="plan" data-state="pending"><span class="step-index">02</span><span class="step-name">Plan</span><small class="step-state">Pending</small></li>
-        <li data-step="approval" data-state="pending"><span class="step-index">03</span><span class="step-name">Approval</span><small class="step-state">Pending</small></li>
-        <li data-step="admission" data-state="pending"><span class="step-index">04</span><span class="step-name">Admission</span><small class="step-state">Pending</small></li>
-        <li data-step="authorization" data-state="pending"><span class="step-index">05</span><span class="step-name">Authorization</span><small class="step-state">Pending</small></li>
-        <li data-step="preparation" data-state="pending"><span class="step-index">06</span><span class="step-name">SDK Prepare</span><small class="step-state">Pending</small></li>
-        <li data-step="execution" data-state="pending"><span class="step-index">07</span><span class="step-name">Execution</span><small class="step-state">Pending</small></li>
-        <li data-step="receipt" data-state="pending"><span class="step-index">08</span><span class="step-name">Receipt</span><small class="step-state">Pending</small></li>
-      </ol>
-    </section>
+      <section class="workflow-panel" aria-label="Current governance progress">
+        <ol class="workflow-steps" aria-label="Plan to receipt progress">
+          <li data-step="plan" data-state="pending"><span class="step-name">Plan</span><small class="step-state">Pending</small></li>
+          <li data-step="approval" data-state="pending"><span class="step-name">Approved</span><small class="step-state">Pending</small></li>
+          <li data-step="admission" data-state="pending"><span class="step-name">Admitted</span><small class="step-state">Pending</small></li>
+          <li data-step="authorization" data-state="pending"><span class="step-name">Authorized</span><small class="step-state">Pending</small></li>
+          <li data-step="execution" data-state="pending"><span class="step-name">Executed</span><small class="step-state">Pending</small></li>
+          <li data-step="receipt" data-state="pending"><span class="step-name">Receipt</span><small class="step-state">Pending</small></li>
+        </ol>
+      </section>
 
-    <section class="access-bar" aria-label="Workspace access">
-      <div class="access-state">
-        <span id="workspace-state" class="workspace-indicator" data-unlocked="false">SANDBOX PAUSED</span>
-        <div><strong id="access-title">Interactive sandbox</strong><p id="capability-status">Start an isolated sandbox session to explore the governance flow.</p></div>
-      </div>
-      <div class="access-actions">
-        <label class="file-button" hidden>Load capability<input id="capability-file" type="file" aria-label="Load private capability file" disabled></label>
-        <button id="start-demo" class="button primary" hidden>Start sandbox</button>
-        <button id="lock" class="button quiet">Pause sandbox</button>
-      </div>
-    </section>
-
-    <div id="error" class="feedback error-feedback" role="alert" hidden></div>
-    <div id="notice" class="feedback notice-feedback" role="status" aria-live="polite" hidden></div>
-
-    <section class="workspace-grid" aria-label="Run workspace">
-      <div class="left-column">
-        <section class="card incident-card" aria-labelledby="incident-title">
-          <div class="card-heading">
-            <div class="heading-mark" aria-hidden="true">01</div>
-            <div><p class="eyebrow">INCIDENT INPUT</p><h2 id="incident-title">Describe the incident</h2><p class="card-subtitle">One request. One bounded business action.</p></div>
-          </div>
-          <label for="intent">Incident context</label>
-          <textarea id="intent" maxlength="4096" rows="4">Create an incident handoff for INC-1042. The checkout API is returning errors. The team should investigate the upstream dependency and preserve investigation notes.</textarea>
-          <div class="generate-row"><button id="generate" class="button primary">Generate Plan &amp; save Run</button><span class="helper-text">Creates a validated Plan and persistent Run only.</span></div>
-          <div class="restore-row">
-            <div><label for="restore-id">Open a saved Run</label><p>Restores persisted state using read-only requests.</p></div>
-            <div class="inline"><input id="restore-id" placeholder="Run UUID" autocomplete="off" aria-label="Saved Run UUID"><button id="restore" class="button quiet">Open Run</button></div>
-          </div>
-        </section>
-
-        <section class="card plan-card" aria-labelledby="plan-title">
-          <div class="card-heading">
-            <div class="heading-mark" aria-hidden="true">02</div>
-            <div><p class="eyebrow">MODEL PROPOSAL · RUNTIME VALIDATED</p><h2 id="plan-title">Review the exact Plan</h2><p class="card-subtitle">Approval is bound to this persisted Plan and version.</p></div>
-          </div>
-          <div class="plan-state-row"><span id="run-state" class="badge">No Run selected</span><span id="run-version" class="version-label"></span></div>
-          <p id="validation" class="validation-copy" role="status" aria-live="polite">Generate a Plan to see validation and risk.</p>
-          <div id="run-identifier-row" class="identifier-row" hidden><span id="run-id" class="identifier">No Run selected</span><button id="copy-run" class="button copy-button" type="button" disabled aria-label="Copy full Run ID">Copy ID</button></div>
-          <div class="gate-actions approval-actions">
-            <button id="approve" class="button primary" disabled>Approve exact Plan</button>
-            <button id="reject" class="button danger" disabled>Reject Plan</button>
-          </div>
-          <p class="gate-note"><span class="gate-symbol" aria-hidden="true">A</span> Approval records your decision. It does not admit or execute an Action.</p>
-          <dl id="plan-fields" class="plan-fields"></dl>
-          <details id="plan-json-details" class="technical-details" hidden><summary>Full structured Plan JSON</summary><pre id="plan-json">No Plan yet.</pre></details>
-        </section>
-      </div>
-
-      <section class="card control-card" aria-labelledby="control-title">
-        <div class="card-heading">
-          <div class="heading-mark control-mark" aria-hidden="true">03</div>
-          <div><p class="eyebrow">HUMAN CONTROL</p><h2 id="control-title">Authorize, then execute</h2><p class="card-subtitle">Admission, authorization, SDK preparation, and execution are separate gates.</p></div>
+      <section class="access-bar" aria-label="Sandbox session">
+        <div class="access-state">
+          <span id="workspace-state" class="workspace-indicator" data-unlocked="false">SANDBOX PAUSED</span>
+          <div><strong id="access-title">Interactive sandbox</strong><p id="capability-status">Start an isolated sandbox session to explore the governance flow.</p></div>
         </div>
-
-        <div class="control-flow">
-          <section class="control-step" aria-labelledby="admission-title">
-            <div class="control-step-heading"><span class="control-number">1</span><div><h3 id="admission-title">Action Admission</h3><p>Materialize the approved Plan as a durable Action.</p></div></div>
-            <button id="admit" class="button quiet" disabled>Admit approved Action</button>
-          </section>
-          <section class="control-step" aria-labelledby="authorization-title">
-            <div class="control-step-heading"><span class="control-number">2</span><div><h3 id="authorization-title">Independent Authorization</h3><p>Grant execution permission for the admitted Action.</p></div></div>
-            <button id="authorize" class="button quiet" disabled>Authorize Action</button>
-          </section>
-          <section id="sdk-controls" class="control-step sdk-control-step">
-            <div class="control-step-heading"><span class="control-number">3</span><div><h3>SDK-only preparation</h3><p id="sdk-control-description">Mode-specific preparation status loads from the backend.</p></div></div>
-            <button id="prepare-sdk" class="button quiet" disabled hidden>Prepare SDK-only execution</button>
-            <p id="sdk-stage-status" class="evidence-detail" hidden></p>
-            <p id="sdk-policy-status" class="evidence-detail" hidden></p>
-            <p id="sdk-audit-status" class="evidence-detail" hidden></p>
-          </section>
+        <div class="access-actions">
+          <label class="file-button" hidden>Load capability<input id="capability-file" type="file" aria-label="Load private capability file" disabled></label>
+          <button id="start-demo" class="button primary" hidden>Start sandbox</button>
+          <button id="lock" class="button quiet">Lock workspace</button>
         </div>
+      </section>
 
-        <div class="execute-row">
-          <div><p class="eyebrow">BOUNDED OPERATOR ACTION</p><p>Execution is never triggered by approval, refresh, or preparation.</p></div>
-          <button id="execute" class="button execute-button" disabled>Execute once</button>
-        </div>
-        <div class="secondary-actions">
-          <button id="try-unauthorized" class="button danger" disabled>Verify unauthorized execution is blocked</button>
-          <button id="replay" class="button quiet" disabled>Replay exact request</button>
-        </div>
+      <div id="error" class="feedback error-feedback" role="alert" hidden></div>
+      <div id="notice" class="feedback notice-feedback" role="status" aria-live="polite" hidden></div>
 
-        <div class="action-result" aria-live="polite">
-          <div class="result-heading"><div><p class="eyebrow">CORE ACTION STATE</p><strong id="action-state" class="action-state-value">No Action admitted</strong><p id="action-message" class="action-message">Awaiting your review.</p></div><span class="receipt-glyph" aria-hidden="true">R</span></div>
-          <div class="result-meta">
-            <div><span class="status-label">ACTION</span><div class="identifier-row compact-identifier"><span id="action-id" class="identifier">—</span><button id="copy-action" class="button copy-button" type="button" disabled aria-label="Copy full Action ID">Copy</button></div></div>
-            <div><span class="status-label">DURABLE RECEIPT</span><div class="receipt-row"><strong id="receipt">—</strong><button id="copy-receipt" class="button copy-button" type="button" disabled aria-label="Copy full receipt reference">Copy</button></div></div>
-          </div>
-          <section id="success-summary" class="success-summary" hidden aria-labelledby="success-title">
-            <div class="success-title-row"><span class="success-check" aria-hidden="true">✓</span><div><p class="eyebrow">CONFIRMED BY BACKEND</p><h3 id="success-title">Core Action: Succeeded</h3></div></div>
-            <div class="success-facts">
-              <div><span class="status-label">INCIDENT</span><strong id="success-incident">Not available</strong></div>
-              <div><span class="status-label">TRUSTED TOOL</span><strong id="success-tool">Not available</strong></div>
-              <div><span class="status-label">BUSINESS HANDOFF</span><strong id="success-record">Checking persisted record…</strong></div>
-              <div><span class="status-label">ARMORIQ OUTCOME</span><strong id="success-policy">Not available in this path</strong></div>
+      <section class="workspace-grid" aria-label="Interactive governance workflow">
+        <div class="left-column">
+          <section class="card incident-card" aria-labelledby="incident-title">
+            <div class="card-heading">
+              <div class="heading-mark" aria-hidden="true">01</div>
+              <div><p class="eyebrow">STEP 1 · PLAN</p><h3 id="incident-title">Generate and review a Plan</h3><p class="card-subtitle">A bounded request becomes a validated proposal.</p></div>
             </div>
-            <div class="receipt-callout"><span>Durable receipt reference</span><strong id="success-receipt">Not available</strong><button id="copy-success-receipt" class="button copy-button" type="button" disabled>Copy receipt</button></div>
+            <label for="intent">Incident description</label>
+            <textarea id="intent" maxlength="4096" rows="3">Create an incident handoff for INC-1042. The checkout API is returning errors. The team should investigate the upstream dependency and preserve investigation notes.</textarea>
+            <div class="generate-row"><button id="generate" class="button primary">Generate Plan</button><span class="helper-text">Creates a validated Plan and persistent Run.</span></div>
           </section>
-          <details class="technical-details"><summary>Full identifiers and backend Action snapshot</summary><p id="full-identifiers" class="identifier"></p><pre id="action-json">No Action yet.</pre></details>
+
+          <section class="card plan-card" aria-labelledby="plan-title">
+            <div class="card-heading">
+              <div class="heading-mark" aria-hidden="true">02</div>
+              <div><p class="eyebrow">MODEL PROPOSAL · RUNTIME VALIDATED</p><h3 id="plan-title">Review the exact Plan</h3><p class="card-subtitle">Your approval is bound to this Plan and version.</p></div>
+            </div>
+            <div class="plan-state-row"><span id="run-state" class="badge">No Run selected</span><span id="run-version" class="version-label"></span></div>
+            <p id="validation" class="validation-copy" role="status" aria-live="polite">Generate a Plan to see its intended action and risk.</p>
+            <dl id="plan-fields" class="plan-fields"></dl>
+            <div class="gate-actions approval-actions">
+              <button id="approve" class="button primary" disabled>Approve exact Plan</button>
+              <button id="reject" class="button danger" disabled>Reject Plan</button>
+            </div>
+            <p class="gate-note"><span class="gate-symbol" aria-hidden="true">✓</span> Approval records your decision. It does not admit or execute an Action.</p>
+            <details id="plan-json-details" class="technical-details" hidden>
+              <summary>Plan technical details</summary>
+              <p id="run-id" class="identifier"></p>
+              <pre id="plan-json">No Plan yet.</pre>
+            </details>
+          </section>
         </div>
-      </section>
-    </section>
 
-    <section class="card timeline-card" aria-labelledby="timeline-title">
-      <div class="panel-heading">
-        <div><p class="eyebrow">PERSISTED EVIDENCE</p><h2 id="timeline-title">Execution timeline</h2><p class="card-subtitle">Known backend events appear in order. Missing detail stays explicit.</p></div>
-        <span class="read-only-note">Read-only view</span>
-      </div>
-      <ol id="timeline" class="evidence-timeline" aria-live="polite"></ol>
-    </section>
+        <section class="card control-card" aria-labelledby="control-title">
+          <div class="card-heading">
+            <div class="heading-mark control-mark" aria-hidden="true">03</div>
+            <div><p class="eyebrow">STEP 2 · GOVERN</p><h3 id="control-title">Approve each control gate</h3><p class="card-subtitle">Admission and independent authorization remain separate decisions.</p></div>
+          </div>
 
-    <section class="bottom-grid" aria-label="Business and policy evidence">
-      <section class="card records-card" aria-labelledby="records-title">
-        <div class="panel-heading records-heading"><div><p class="eyebrow">BUSINESS STORE</p><h2 id="records-title">Persisted handoffs</h2><p class="card-subtitle">Read-only records from the separate business SQLite store.</p></div><button id="refresh-records" class="button quiet">Refresh records</button></div>
-        <div id="records"><p class="empty">Start an isolated sandbox session to view demo records.</p></div>
-      </section>
-      <section class="card policy-card" aria-labelledby="policy-title">
-        <div class="panel-heading"><div><p id="policy-lab-label" class="eyebrow">MOCK POLICY LAB</p><h2 id="policy-title">Policy boundary evidence</h2></div></div>
-        <div id="policy-history-banner" class="history-banner"><strong id="policy-origin-label">POLICY PROVENANCE</strong><p id="policy-lab-description">Policy evidence is shown with its backend-reported source.</p></div>
-        <p class="policy-boundary-note">Historical denial is separate from the current Run. A policy check does not create a Core Action or execute a business operation.</p>
-        <button id="policy-test" class="button danger">Test simulated forbidden operation</button>
-        <div id="policy-result" class="policy-result" role="status" aria-live="polite">No policy evidence loaded.</div>
-        <p id="live-evidence" class="identifier live-evidence"></p>
-      </section>
-    </section>
+          <div class="control-flow">
+            <section class="control-step" aria-labelledby="admission-title">
+              <div class="control-step-heading"><span class="control-number">1</span><div><h4 id="admission-title">Action Admission</h4><p>Admit the approved Plan as a durable Action.</p></div></div>
+              <button id="admit" class="button quiet" disabled>Admit approved Action</button>
+            </section>
+            <section class="control-step" aria-labelledby="authorization-title">
+              <div class="control-step-heading"><span class="control-number">2</span><div><h4 id="authorization-title">Independent Authorization</h4><p>Grant execution permission for the admitted Action.</p></div></div>
+              <button id="authorize" class="button quiet" disabled>Authorize Action</button>
+            </section>
+            <section id="sdk-controls" class="control-step sdk-control-step" hidden>
+              <div class="control-step-heading"><span class="control-number">3</span><div><h4>SDK-only preparation</h4><p id="sdk-control-description">Mode-specific preparation status loads from the backend.</p></div></div>
+              <button id="prepare-sdk" class="button quiet" disabled hidden>Prepare SDK-only execution</button>
+              <p id="sdk-stage-status" class="evidence-detail" hidden></p>
+              <p id="sdk-policy-status" class="evidence-detail" hidden></p>
+              <p id="sdk-audit-status" class="evidence-detail" hidden></p>
+            </section>
+          </div>
 
-    <footer id="mode-footer">Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · Connecting…</footer>
+          <div id="playground-disclosure" class="playground-disclosure" hidden><span class="disclosure-mark" aria-hidden="true">i</span><span>Sandbox mode: Real AI planning with simulated execution. No new ArmorIQ policy request is sent from this demo.</span></div>
+          <div class="execute-row">
+            <div><p class="eyebrow">STEP 3 · EXECUTE</p><p>Execution requires your explicit action and the correct authorization state.</p></div>
+            <button id="execute" class="button execute-button" disabled>Execute once</button>
+          </div>
+
+          <div class="action-result" aria-live="polite">
+            <div class="result-heading"><div><p class="eyebrow">CURRENT RUN</p><strong id="action-state" class="action-state-value">No Action admitted</strong><p id="action-message" class="action-message">Awaiting your review.</p></div><span class="receipt-glyph" aria-hidden="true">✓</span></div>
+            <section id="success-summary" class="success-summary" hidden aria-labelledby="success-title">
+              <div class="success-title-row"><span class="success-check" aria-hidden="true">✓</span><div><p class="eyebrow">CONFIRMED BY BACKEND</p><h4 id="success-title">Core Action: Succeeded</h4></div></div>
+              <div class="success-facts">
+                <div><span class="status-label">INCIDENT</span><strong id="success-incident">Not available</strong></div>
+                <div><span class="status-label">TRUSTED TOOL</span><strong id="success-tool">Not available</strong></div>
+                <div><span class="status-label">DURABLE HANDOFF</span><strong id="success-record">Checking persisted record…</strong></div>
+                <div id="success-policy-row"><span class="status-label">ARMORIQ OUTCOME</span><strong id="success-policy">Not available in this path</strong></div>
+              </div>
+              <div class="receipt-callout"><span>Matched durable receipt</span><strong id="success-receipt">Not available</strong></div>
+            </section>
+            <details class="technical-details">
+              <summary>Run and Action evidence</summary>
+              <p id="full-identifiers" class="identifier"></p>
+              <pre id="action-json">No Action yet.</pre>
+            </details>
+          </div>
+        </section>
+      </section>
     </section>
   </main>
 </body>
