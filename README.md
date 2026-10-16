@@ -9,15 +9,26 @@ The redesigned console makes the separate Plan, Approval, Admission,
 Authorization, SDK preparation and execution stages visible. Its timeline and
 receipt summary display backend evidence; they do not grant permissions.
 
-The V4 reference completed one real phi4-mini/ArmorIQ SDK-only handoff using
-this redesigned console and fresh human gates. Independent verification found
-one execution attempt, one SQLite handoff, Core Action Succeeded and a matching
-durable receipt. Authenticated Platform readback matched the new report and
-showed its allowed/Success row; a separate historical purge denial remains
-clearly labelled. The V4 artifacts are private, ignored files under
-`.artifacts/final-submission/v4-redesigned-ui/`. The final competition video
-still requires the operator's own fresh execution and real English voice.
-No video has been uploaded and no competition entry has been submitted. Qualification-time statements in
+The current [Azure demo](https://aegis-relay-72dcab0e.australiaeast.cloudapp.azure.com/)
+provides genuine DeepSeek planning with **simulated local effects** in an isolated
+public playground. Approval, Admission, independent Authorization and Execute
+remain separate steps. Anonymous visitors do not receive real SDK execution access.
+
+A separate read-only evidence card presents a completed real Azure ArmorIQ SDK-only
+execution: Run `2d488ffa-9623-4501-9d2c-835ac5aa9dc0`, Action
+`fb689b14-75b8-4c78-b485-c61bac4c68a7`. The validated historical record confirms
+explicit remote Allow, Core Succeeded, one synthetic handoff, a matched durable
+receipt, and audit/completion acknowledgements. Opening the card does not replay
+that Action. Operator credentials and capability stay on the VM; the protected
+SDK-only service is not exposed to anonymous visitors.
+
+The earlier V4 local reference and its authenticated Platform observations are
+historical artifacts under `.artifacts/final-submission/v4-redesigned-ui/`.
+They must not be substituted for UI verification of the distinct Azure execution.
+Final media uses the approved current website and preserved Azure result; it does
+not require a new real execution. The operator's real English narration and final
+publication/submission approval remain required.
+No final video has been uploaded and no competition entry has been submitted. Qualification-time statements in
 [historical reports](docs/phase24-application-e2e-report.md) remain unchanged.
 
 The shared Core is a pre-existing project dependency maintained by the same
@@ -255,3 +266,24 @@ restart; an Unknown Action is never automatically retried. This is a bounded
 hackathon simulation, not production multi-user authentication or live SDK proof.
 See [the single-VM deployment instructions](deploy/azure/README.md) for the approved
 infrastructure, private credential transfer and cloud acceptance checks.
+
+## Public cloud evidence and ArmorIQ web interfaces
+
+The VM-local read-only exporter validates the exact persisted Azure Run, Action,
+policy, enforcement request, receipt, effect count and audit/completion result.
+It writes a strict credential-free allowlisted record for the public service.
+Missing or mismatched evidence renders **UNVERIFIED**. No capability, intent token,
+signed dispatch permit, raw audit payload or credential store is exported.
+
+[ArmorIQ Platform](https://platform.armoriq.ai/) and
+[ArmorIQ Console](https://tools.armoriq.ai/) are separate interfaces. A Platform
+readback on 16 October 2026 matched the Azure policy and audit/request detail to
+the exact Action, Succeeded state, business effect and receipt. The dashboard
+request ID is the SDK audit ID; it is distinct from the remote enforcement
+request ID. Separate historical purge requests appear as Blocked.
+
+The authenticated Console showed Pro and Policy Studio for ArmorClaude, with
+active version v0, no tool rules and configurable unmatched-tool decisions.
+These governance controls do not by themselves prove the Azure policy decision
+or imply synchronization with the SDK policy. No policy was changed for the
+final media.
