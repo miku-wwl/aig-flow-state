@@ -26,7 +26,7 @@ function controls() {
   const receiptReference = action?.result?.receipt_reference;
   $('copy-receipt').disabled = !receiptReference;
   $('copy-success-receipt').disabled = !receiptReference || action?.state !== 'Succeeded';
-  $('workspace-state').textContent = publicDemo ? unlocked ? 'DEMO SESSION READY' : 'DEMO SESSION PAUSED' : capability ? 'WORKSPACE UNLOCKED' : 'WORKSPACE LOCKED';
+  $('workspace-state').textContent = publicDemo ? unlocked ? 'SANDBOX READY' : 'SANDBOX PAUSED' : capability ? 'WORKSPACE UNLOCKED' : 'WORKSPACE LOCKED';
   $('workspace-state').dataset.unlocked = String(unlocked);
 }
 
@@ -113,31 +113,58 @@ function renderSuccess() {
 
 function renderCloudEvidence(bundle) {
   const evidence = bundle?.evidence;
-  const verified = bundle?.status === 'VERIFIED' && evidence?.status === 'VERIFIED';
-  const set = (id, value) => { $(id).textContent = value || 'Not available'; };
+  const timestamp = evidence?.execution_at_utc ? Date.parse(evidence.execution_at_utc) : NaN;
+  const verified = bundle?.status === 'VERIFIED'
+    && bundle?.current_execution_mode === 'MOCK'
+    && evidence?.status === 'VERIFIED'
+    && evidence?.transport === 'REAL_PLATFORM'
+    && evidence?.decision === 'Allow'
+    && evidence?.enforcement_http_status === 200
+    && evidence?.action_state === 'Succeeded'
+    && evidence?.effect_count === 1
+    && evidence?.receipt_matched === true
+    && evidence?.audit_status === 'ACKNOWLEDGED'
+    && evidence?.audit_http_status === 200
+    && evidence?.completion_success === true
+    && Number.isFinite(timestamp)
+    && typeof evidence?.policy_id === 'string'
+    && typeof evidence?.receipt_reference === 'string';
+  const set = (id, value) => { $(id).textContent = value ?? 'Not available'; };
+  const when = verified
+    ? new Date(timestamp).toLocaleString('en-NZ', {timeZone:'UTC', dateStyle:'medium', timeStyle:'short'})
+    : 'Not verified';
+  $('cloud-evidence').dataset.verification = verified ? 'verified' : 'unverified';
   $('cloud-evidence-status').textContent = verified ? 'VERIFIED' : 'UNVERIFIED';
   $('cloud-evidence-status').dataset.state = verified ? 'verified' : 'unknown';
-  $('cloud-evidence-title').textContent = verified
-    ? 'Verified Azure SDK-only execution — historical read-only evidence'
-    : 'ArmorIQ cloud evidence is unverified';
+  $('cloud-evidence-title').textContent = verified ? 'Verified Cloud Execution' : 'Cloud evidence is unverified';
   $('cloud-evidence-eyebrow').textContent = verified
-    ? 'PERSISTED AZURE CLOUD EVIDENCE'
+    ? 'AZURE · REAL ARMORIQ ENFORCEMENT'
     : 'ARMORIQ CLOUD INTEGRATION STATUS';
   $('cloud-evidence-message').textContent = verified
-    ? `Protected VM readback confirms a real ArmorIQ Allow on ${new Date(evidence.execution_at_utc).toLocaleString('en-NZ', {timeZone:'UTC', dateStyle:'medium', timeStyle:'short'})} UTC. This record is historical and read-only; no new live request is sent here.`
-    : 'The protected VM evidence file is missing or did not match the expected persisted Run, Action, policy, receipt and audit records. No Allow is claimed.';
+    ? 'ArmorIQ returned an explicit Allow. The Core Action succeeded, one durable handoff matched its receipt, and the audit was acknowledged on ' + when + ' UTC.'
+    : 'Persisted Run, Action, policy, receipt and audit evidence is missing or inconsistent. No Allow is claimed.';
   set('cloud-evidence-path', verified ? 'SDK-only · REAL_PLATFORM' : 'Not verified');
-  set('cloud-evidence-decision', verified ? `Allow · HTTP ${evidence.enforcement_http_status}` : 'Not verified');
-  set('cloud-evidence-policy', verified ? `${evidence.policy_name} · ${evidence.policy_id}` : 'Not verified');
-  set('cloud-evidence-action', verified ? `Succeeded · ${evidence.tool_name} v${evidence.tool_version} · ${evidence.target}` : 'Not verified');
-  set('cloud-evidence-receipt', verified ? '1 synthetic handoff · receipt matched' : 'Not verified');
-  set('cloud-evidence-audit', verified ? `Acknowledged · HTTP ${evidence.audit_http_status}` : 'Not verified');
+  set('cloud-evidence-decision', verified ? 'Allow · HTTP ' + evidence.enforcement_http_status : 'Not verified');
+  set('cloud-evidence-policy', verified ? 'Registered policy matched' : 'Not verified');
+  set('cloud-evidence-action', verified ? 'Succeeded · ' + evidence.tool_name + ' v' + evidence.tool_version : 'Not verified');
+  set('cloud-evidence-effect', verified ? 'Exactly 1 · synthetic handoff' : 'Not verified');
+  set('cloud-evidence-receipt', verified ? 'Matched durable receipt' : 'Not verified');
+  set('cloud-evidence-audit', verified ? 'Acknowledged · HTTP ' + evidence.audit_http_status : 'Not verified');
+  set('cloud-evidence-time', when + (verified ? ' UTC' : ''));
+  set('hero-evidence-status', verified ? 'ArmorIQ Cloud · Verified' : 'ArmorIQ Cloud · Unverified');
+  set('hero-evidence-summary', verified
+    ? 'Real SDK-only Allow confirmed. This is a previously completed Azure execution.'
+    : 'Persisted cloud evidence is unavailable or inconsistent. No Allow is claimed.');
+  set('hero-evidence-path', verified ? 'SDK-only · REAL_PLATFORM' : 'Not verified');
+  set('hero-evidence-result', verified ? 'Core Succeeded' : 'Not verified');
+  set('hero-evidence-receipt', verified ? 'Matched' : 'Not verified');
   $('cloud-evidence-details').hidden = !verified;
   $('cloud-evidence-refs').replaceChildren();
   if (verified) {
     const refs = [
       ['Run', evidence.run_id], ['Action', evidence.action_id], ['Intent Plan', evidence.plan_id],
-      ['ArmorIQ enforcement request', evidence.enforcement_request_id], ['Policy', evidence.policy_id],
+      ['ArmorIQ enforcement request', evidence.enforcement_request_id], ['Registered policy', evidence.policy_name],
+      ['Policy ID', evidence.policy_id], ['Business effect count', String(evidence.effect_count)],
       ['Receipt', evidence.receipt_reference], ['Audit', evidence.audit_id],
       ['Execution UTC', evidence.execution_at_utc], ['Source', evidence.source]
     ];
@@ -147,13 +174,21 @@ function renderCloudEvidence(bundle) {
     }
   }
   const denial = bundle?.historical_denial;
-  set('historical-denial-title', denial
+  const denialVerified = denial?.status === 'BLOCKED'
+    && denial?.operation === 'purge_incident_history'
+    && denial?.reason === 'tool_not_in_allowlist'
+    && denial?.date_utc === '2026-10-11'
+    && typeof denial?.request_id === 'string'
+    && denial?.source?.startsWith('https://github.com/miku-wwl/aig-flow-state/blob/main/docs/phase22-sdk-only-feasibility.md');
+  $('historical-denial').hidden = !denialVerified;
+  set('historical-denial-title', denialVerified
     ? `${denial.status} · ${denial.operation} · ${denial.reason}`
-    : 'Historical denial details unavailable');
-  set('historical-denial-detail', denial
+    : 'Historical Blocked details unavailable');
+  set('historical-denial-detail', denialVerified
     ? `${denial.origin}; ${denial.date_utc} UTC. Request ${denial.request_id}. This separate historical Block is not from the Azure Allow Action above.`
     : 'The documented historical denial record is unavailable.');
-  if (denial?.source) $('historical-denial-source').href = denial.source;
+  if (denialVerified) $('historical-denial-source').href = denial.source;
+  return verified;
 }
 
 function setStep(key, state) {
@@ -314,7 +349,7 @@ async function records() {
   const {data} = await api('/api/handoffs');
   businessRecords = data.records; businessRecordsLoaded = true;
   $('records').replaceChildren();
-  if (!data.records.length) { const p=document.createElement('p'); p.className='empty'; p.textContent='No handoff records yet.'; $('records').append(p); }
+  if (!data.records.length) { const p=document.createElement('p'); p.className='empty'; p.textContent=publicDemo ? 'No simulated handoffs in this sandbox yet.' : 'No handoff records yet.'; $('records').append(p); }
   data.records.forEach(record => {
     const item=document.createElement('article'); item.className='record'; item.dataset.receipt=record.receipt_reference;
     [['strong',record.incident_id + ' · ' + record.summary],['p',record.handoff_note],['p','Receipt ' + record.receipt_reference],['p','Effect ' + record.effect_key + ' · ' + record.created_at]].forEach(([tag,text],index) => {const child=document.createElement(tag); child.textContent=text; if(index>=2)child.className='identifier'; item.append(child);}); $('records').append(item);
@@ -338,35 +373,54 @@ async function updateStatus() {
   publicDemo = data.public_demo === true;
   demoCsrf = publicDemo ? data.demo_csrf || '' : '';
   $('public-banner').hidden = !publicDemo;
+  $('playground-disclosure').hidden = !publicDemo;
   $('cloud-evidence').hidden = !publicDemo;
   $('start-demo').hidden = !publicDemo;
   $('capability-file').parentElement.hidden = publicDemo;
   $('capability-file').disabled = publicDemo;
+  const cloudVerified = renderCloudEvidence(data.armoriq_evidence);
   if (publicDemo) {
-    $('access-title').textContent = 'Isolated public demo session';
-    $('capability-status').textContent = 'Your session uses synthetic data and simulated effects. Private operator credentials are not accepted.';
-    $('lock').textContent = 'Pause demo controls';
+    $('access-title').textContent = 'Isolated sandbox session';
+    $('capability-status').textContent = 'Start or pause your private demo session. Operator credentials are never accepted here.';
+    $('lock').textContent = 'Pause sandbox';
+    $('start-demo').textContent = 'Start sandbox session';
     $('intent').maxLength = 1500;
-    renderCloudEvidence(data.armoriq_evidence);
+  } else {
+    $('access-title').textContent = 'Operator capability';
+    $('capability-status').textContent = 'Load your private capability file to unlock this workspace. It stays in browser memory.';
+    $('lock').textContent = 'Lock workspace';
+    $('intent').maxLength = 4096;
   }
   executionPath=data.execution_path || 'unknown';
-  $('provider-mode').textContent = data.provider.mode === 'fixture' ? 'Deterministic fixture · offline' : data.provider.mode === 'deepseek' ? `DeepSeek · ${data.provider.model} · thinking disabled` : `Live local Ollama · ${data.provider.model || 'discover phi4-mini'}`;
+  const providerLabel = data.provider.mode === 'fixture'
+    ? 'Deterministic fixture · offline'
+    : data.provider.mode === 'deepseek'
+      ? 'DeepSeek · ' + (data.provider.model || 'model')
+      : 'Ollama · ' + (data.provider.model || 'local model');
+  $('provider-mode').textContent = providerLabel;
+  $('provider-detail').textContent = publicDemo && data.provider.mode === 'deepseek'
+    ? 'Real Plan generation'
+    : data.provider.mode === 'fixture' ? 'Deterministic test provider' : 'Configured Plan provider';
   const live = data.enforcement === 'LIVE';
   sdkOnly = data.execution_path === 'sdk-only';
   const offline = live && data.armoriq?.transport === 'OFFLINE_TEST';
   $('prepare-sdk').hidden = !sdkOnly;
-  $('mode-chip').textContent = publicDemo ? 'PUBLIC SIMULATION' : offline ? 'LOCAL / OFFLINE SDK TEST' : sdkOnly ? 'ARMORIQ SDK-ONLY LIVE' : live ? 'PROXY LIVE' : 'LOCAL / MOCK';
-  $('mode-chip').dataset.mode = offline ? 'offline' : live ? 'live' : 'mock';
-  $('enforcement-mode').textContent = data.enforcement_label;
+  $('mode-chip').textContent = publicDemo ? 'SANDBOX' : offline ? 'LOCAL / OFFLINE SDK TEST' : sdkOnly ? 'ARMORIQ SDK-ONLY LIVE' : live ? 'PROXY LIVE' : 'LOCAL / MOCK';
+  $('mode-chip').dataset.mode = publicDemo ? 'sandbox' : offline ? 'offline' : live ? 'live' : 'mock';
   $('integration-status').textContent = publicDemo
-    ? data.armoriq_evidence?.status === 'VERIFIED' ? 'Cloud verified · historical SDK-only Allow' : 'Cloud evidence UNVERIFIED'
-    : live ? offline ? 'OFFLINE TEST TRANSPORT · no platform request' : `Connectivity ${data.armoriq.connectivity} · Registration ${data.armoriq.registration}` : 'Not connected · local mock only';
+    ? cloudVerified ? 'ArmorIQ Cloud · Verified' : 'ArmorIQ Cloud · Unverified'
+    : live ? offline ? 'ArmorIQ · Offline test' : 'ArmorIQ · ' + (data.armoriq?.connectivity || 'Connected') : 'Not connected';
+  $('integration-detail').textContent = publicDemo
+    ? cloudVerified ? 'Real SDK-only Allow confirmed' : 'Evidence unavailable · no Allow claimed'
+    : live ? offline ? 'No platform request was made' : 'Configured live enforcement path' : 'This runtime uses local simulated enforcement';
   $('policy-lab-label').textContent = offline ? 'OFFLINE POLICY FIXTURE' : sdkOnly ? 'HISTORICAL PLATFORM REFERENCE' : live ? 'LIVE POLICY BOUNDARY' : 'LOCAL MOCK POLICY LAB';
   $('policy-origin-label').textContent = offline ? 'OFFLINE TEST MODE · NO LIVE PLATFORM REQUEST' : sdkOnly ? 'HISTORICAL ARMORIQ REFERENCE AVAILABLE ON REQUEST' : live ? 'POLICY PROBE REQUIRES AN EXPLICIT OPERATOR CLICK' : 'LOCAL MOCK EVIDENCE · NOT ARMORIQ';
   $('sdk-control-description').textContent = sdkOnly ? 'Explicit, ephemeral preparation. No business write.' : 'Not used by the current execution path.';
   $('policy-lab-description').textContent = sdkOnly ? 'Load the preserved Phase 2.2 denial reference. The backend returns its historical ID without a new remote request.' : offline ? 'Uses a deterministic offline transport. It cannot qualify live platform enforcement.' : live ? 'The explicit probe uses the configured live boundary; it is never called on page load.' : 'Runs a deterministic local policy check. No ArmorIQ call and no Core Action.';
   $('policy-test').textContent = sdkOnly ? 'Load historical denial reference' : offline ? 'Run offline policy fixture' : live ? 'Run explicit policy denial probe' : 'Test local mock denial';
-  $('mode-footer').textContent = `Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · ${offline ? 'Offline SDK transport — no live qualification' : live ? 'Live ArmorIQ path — backend status and evidence only' : 'Local mock execution path'}`;
+  $('mode-footer').textContent = publicDemo
+    ? 'Agentic Intent Gate v0.1.0 · Public sandbox · simulated effects · verified cloud record is read only'
+    : 'Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · ' + (offline ? 'Offline SDK transport — no live qualification' : live ? 'Live ArmorIQ path — backend status and evidence only' : 'Local mock execution path');
   renderPresentation();
   controls();
   return data;
@@ -407,7 +461,13 @@ $('lock').onclick = () => {
   demoCsrf='';
   capability=''; run=null; action=null; lastExecution=null; sdkStage=null; businessRecords=[]; businessRecordsLoaded=false; policyEvidence=null;
   renderRun(); renderAction(); $('records').replaceChildren(); $('policy-result').textContent='No policy evidence loaded.'; $('live-evidence').textContent='';
-  $('capability-status').textContent='Workspace locked. Load your private capability file.'; controls();
+  $('capability-status').textContent = publicDemo
+    ? 'Sandbox session paused. Start it again to continue. Private operator credentials are never accepted.'
+    : 'Workspace locked. Load your private capability file.';
+  const empty = document.createElement('p'); empty.className='empty';
+  empty.textContent = publicDemo ? 'Start an isolated sandbox session to view demo records.' : 'Unlock the workspace to view records.';
+  $('records').append(empty);
+  controls();
 };
 
 $('generate').onclick = () => perform(async () => {

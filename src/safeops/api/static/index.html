@@ -4,77 +4,100 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10151e">
-  <title>Aegis Relay — Agent Execution Console</title>
-  <meta name="description" content="Aegis Relay is a permissioned AI agent execution console for governed incident handoffs.">
-  <link rel="stylesheet" href="/static/styles.css">
-  <script defer src="/static/app.js"></script>
+  <title>Aegis Relay — Govern AI Actions with ArmorIQ</title>
+  <meta name="description" content="Aegis Relay governs AI actions with human approval, genuine ArmorIQ cloud enforcement evidence and verifiable receipts.">
+  <link rel="stylesheet" href="/static/styles.css?v=20261017-ui-polish">
+  <script defer src="/static/app.js?v=20261017-ui-polish"></script>
 </head>
 <body>
   <header class="app-header">
     <a class="brand" href="/" aria-label="Aegis Relay home">
       <span class="brand-mark" aria-hidden="true">A</span>
-      <span class="brand-copy"><strong>Aegis Relay</strong><small>Agent Execution Console</small></span>
+      <span class="brand-copy"><strong>Aegis Relay</strong><small>AI Agent Governance</small></span>
     </a>
     <p class="header-tagline">Trust the intent. Govern the action.</p>
     <div class="header-status" aria-label="Runtime status">
-      <div class="status-cell mode-cell">
-        <span class="status-label">ENFORCEMENT</span>
-        <strong id="mode-chip" class="chip">LOCAL / MOCK</strong>
-        <small id="enforcement-mode">Connecting to backend…</small>
+      <div class="status-cell integration-cell">
+        <span class="status-label">ARMORIQ INTEGRATION</span>
+        <strong id="integration-status" class="status-value">Verifying cloud evidence…</strong>
+        <small id="integration-detail">Reading persisted Azure record</small>
       </div>
-      <div class="status-cell">
+      <div class="status-cell provider-cell">
         <span class="status-label">PLAN PROVIDER</span>
         <strong id="provider-mode" class="status-value">Connecting…</strong>
-      </div>
-      <div class="status-cell integration-cell">
-        <span class="status-label">ARMORIQ</span>
-        <strong id="integration-status" class="status-value">Checking backend status…</strong>
+        <small id="provider-detail">Plan provider status</small>
       </div>
     </div>
   </header>
 
   <main class="console">
-    <section id="public-banner" class="public-demo-banner" hidden>
-      <strong>PUBLIC SIMULATION · Synthetic data only</strong>
-      <p>DeepSeek proposes a Plan. Approval and Authorization are separate human steps. Execution writes only to your isolated demo store; it makes no ArmorIQ request. Four Plans per session; shared daily limits apply.</p>
-    </section>
-    <section id="cloud-evidence" class="card cloud-evidence-card" hidden aria-labelledby="cloud-evidence-title">
-      <div class="panel-heading cloud-evidence-heading">
-        <div><p id="cloud-evidence-eyebrow" class="eyebrow">ARMORIQ CLOUD INTEGRATION STATUS</p><h2 id="cloud-evidence-title">Checking persisted Azure evidence…</h2></div>
-        <span id="cloud-evidence-status" class="evidence-status">CHECKING</span>
+    <section class="hero-panel" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">AI AGENT GOVERNANCE · VERIFIED CLOUD ENFORCEMENT</p>
+        <h1 id="hero-title">Govern AI Actions with Real ArmorIQ Enforcement</h1>
+        <p class="hero-lead">DeepSeek proposes. Humans approve. ArmorIQ enforces. Every execution is verified with a durable receipt.</p>
+        <div class="hero-actions">
+          <a class="button primary hero-primary" href="#cloud-evidence">Explore Verified Execution <span aria-hidden="true">↓</span></a>
+          <a class="button quiet hero-secondary" href="#playground">Try Interactive Demo <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="hero-footnote">Real cloud evidence is preserved below. The public playground is an isolated simulation.</p>
       </div>
-      <p id="cloud-evidence-message" class="cloud-evidence-message">Loading a sanitized read-only record from the protected Azure SDK-only runtime.</p>
-      <div class="cloud-evidence-grid" aria-label="Verified historical execution evidence">
-        <div><span class="status-label">EXECUTION PATH</span><strong id="cloud-evidence-path">Not loaded</strong></div>
-        <div><span class="status-label">ARMORIQ DECISION</span><strong id="cloud-evidence-decision">Not loaded</strong></div>
+      <aside class="hero-proof" aria-label="Verified ArmorIQ integration status">
+        <div class="hero-proof-heading">
+          <span class="proof-icon" aria-hidden="true">✓</span>
+          <div><p class="eyebrow">ARMORIQ CLOUD</p><strong id="hero-evidence-status">Checking evidence</strong></div>
+        </div>
+        <p id="hero-evidence-summary" class="hero-proof-summary">Loading the persisted Azure SDK-only verification record.</p>
+        <div class="hero-proof-facts">
+          <div><span>ENFORCEMENT</span><strong id="hero-evidence-path">Checking…</strong></div>
+          <div><span>CORE RESULT</span><strong id="hero-evidence-result">Checking…</strong></div>
+          <div><span>DURABLE RECEIPT</span><strong id="hero-evidence-receipt">Checking…</strong></div>
+        </div>
+        <a href="#cloud-evidence" class="hero-proof-link">View persisted evidence <span aria-hidden="true">↘</span></a>
+      </aside>
+    </section>
+
+    <section id="cloud-evidence" class="card cloud-evidence-card" hidden aria-labelledby="cloud-evidence-title">
+      <div class="cloud-evidence-heading">
+        <div><p id="cloud-evidence-eyebrow" class="eyebrow">VERIFIED AZURE EXECUTION</p><h2 id="cloud-evidence-title">Verified Cloud Execution</h2><p class="card-subtitle">Real ArmorIQ SDK-only enforcement · Azure</p></div>
+        <div class="cloud-evidence-status-group"><span id="cloud-evidence-provenance" class="provenance-label">Previously completed · Read-only evidence</span><span id="cloud-evidence-status" class="evidence-status">CHECKING</span></div>
+      </div>
+      <p id="cloud-evidence-message" class="cloud-evidence-message">Loading a sanitized record from the protected Azure SDK-only runtime.</p>
+      <div class="cloud-evidence-grid" aria-label="Azure ArmorIQ execution metrics">
+        <div><span class="status-label">ENFORCEMENT PATH</span><strong id="cloud-evidence-path">Not loaded</strong></div>
+        <div><span class="status-label">REMOTE POLICY</span><strong id="cloud-evidence-decision">Not loaded</strong></div>
         <div><span class="status-label">REGISTERED POLICY</span><strong id="cloud-evidence-policy">Not loaded</strong></div>
         <div><span class="status-label">CORE ACTION</span><strong id="cloud-evidence-action">Not loaded</strong></div>
+        <div><span class="status-label">BUSINESS EFFECT</span><strong id="cloud-evidence-effect">Not loaded</strong></div>
         <div><span class="status-label">DURABLE RECEIPT</span><strong id="cloud-evidence-receipt">Not loaded</strong></div>
-        <div><span class="status-label">SDK AUDIT</span><strong id="cloud-evidence-audit">Not loaded</strong></div>
+        <div><span class="status-label">AUDIT</span><strong id="cloud-evidence-audit">Not loaded</strong></div>
+        <div><span class="status-label">EXECUTED · UTC</span><strong id="cloud-evidence-time">Not loaded</strong></div>
       </div>
-      <p class="cloud-current-mode"><strong>Current public execution mode: MOCK.</strong> The anonymous playground never sends ArmorIQ enforcement requests. The Allow below is historical evidence from the protected operator runtime.</p>
+      <p class="cloud-evidence-note"><strong>Provenance:</strong> Previously completed operator execution. This evidence view is read-only and does not trigger another policy request.</p>
       <details id="cloud-evidence-details" class="cloud-evidence-details" hidden>
-        <summary>Open sanitized evidence references</summary>
+        <summary>Technical details and full evidence identifiers</summary>
         <dl id="cloud-evidence-refs" class="cloud-evidence-refs"></dl>
       </details>
-      <div class="historical-denial" aria-label="Separate historical ArmorIQ denial evidence">
-        <div><p class="eyebrow">SEPARATE HISTORICAL DENY · NOT THIS AZURE ACTION</p><strong id="historical-denial-title">Historical denial record</strong></div>
+      <div id="historical-denial" class="historical-denial" aria-label="Separate historical ArmorIQ denial evidence">
+        <div><p class="eyebrow">SEPARATE HISTORICAL BLOCK · NOT THIS AZURE ACTION</p><strong id="historical-denial-title">Historical Blocked record</strong></div>
         <p id="historical-denial-detail">Loading the documented Phase 2.2 evidence…</p>
         <a id="historical-denial-source" href="https://github.com/miku-wwl/aig-flow-state/blob/main/docs/phase22-sdk-only-feasibility.md" target="_blank" rel="noopener noreferrer">Open Phase 2.2 source report</a>
       </div>
     </section>
-    <section class="page-heading">
-      <div>
-        <p class="eyebrow">SECURE INCIDENT HANDOFF</p>
-        <h1>Agent Execution Console</h1>
-        <p class="page-subtitle">Review the proposal. Record human approval. Authorize and execute as separate steps.</p>
-      </div>
-      <div class="scope-card">
-        <span class="status-label">EXECUTION SCOPE</span>
-        <strong>Single bounded handoff</strong>
-        <small>One trusted SIDE_EFFECT tool</small>
-      </div>
-    </section>
+
+    <section id="playground" class="playground-section" aria-labelledby="playground-title">
+      <header class="playground-heading">
+        <div>
+          <p class="eyebrow">TRY THE GOVERNANCE FLOW</p>
+          <h2 id="playground-title">Interactive Governance Playground</h2>
+          <p class="playground-subtitle">Explore real DeepSeek planning, exact human approval, independent authorization, and durable receipts in an isolated sandbox.</p>
+        </div>
+        <div class="playground-badges">
+          <span id="public-banner" class="sandbox-badge" hidden>SAFE SANDBOX</span>
+          <span id="mode-chip" class="chip" data-mode="mock">SANDBOX</span>
+        </div>
+      </header>
+      <p id="playground-disclosure" class="playground-disclosure"><span class="disclosure-mark" aria-hidden="true">i</span><span><strong>Sandbox execution uses simulated effects.</strong> No new ArmorIQ enforcement request is made from this playground.</span></p>
 
     <section class="workflow-panel" aria-labelledby="workflow-title">
       <div class="panel-heading compact-heading">
@@ -95,13 +118,13 @@
 
     <section class="access-bar" aria-label="Workspace access">
       <div class="access-state">
-        <span id="workspace-state" class="workspace-indicator" data-unlocked="false">WORKSPACE LOCKED</span>
-        <div><strong id="access-title">Operator capability</strong><p id="capability-status">Load your private capability file to unlock this workspace. It stays in browser memory.</p></div>
+        <span id="workspace-state" class="workspace-indicator" data-unlocked="false">SANDBOX PAUSED</span>
+        <div><strong id="access-title">Interactive sandbox</strong><p id="capability-status">Start an isolated sandbox session to explore the governance flow.</p></div>
       </div>
       <div class="access-actions">
-        <label class="file-button">Load capability<input id="capability-file" type="file" aria-label="Load private capability file"></label>
-        <button id="start-demo" class="button primary" hidden>Start isolated demo session</button>
-        <button id="lock" class="button quiet">Lock workspace</button>
+        <label class="file-button" hidden>Load capability<input id="capability-file" type="file" aria-label="Load private capability file" disabled></label>
+        <button id="start-demo" class="button primary" hidden>Start sandbox</button>
+        <button id="lock" class="button quiet">Pause sandbox</button>
       </div>
     </section>
 
@@ -207,7 +230,7 @@
     <section class="bottom-grid" aria-label="Business and policy evidence">
       <section class="card records-card" aria-labelledby="records-title">
         <div class="panel-heading records-heading"><div><p class="eyebrow">BUSINESS STORE</p><h2 id="records-title">Persisted handoffs</h2><p class="card-subtitle">Read-only records from the separate business SQLite store.</p></div><button id="refresh-records" class="button quiet">Refresh records</button></div>
-        <div id="records"><p class="empty">Load capability to view records.</p></div>
+        <div id="records"><p class="empty">Start an isolated sandbox session to view demo records.</p></div>
       </section>
       <section class="card policy-card" aria-labelledby="policy-title">
         <div class="panel-heading"><div><p id="policy-lab-label" class="eyebrow">MOCK POLICY LAB</p><h2 id="policy-title">Policy boundary evidence</h2></div></div>
@@ -220,6 +243,7 @@
     </section>
 
     <footer id="mode-footer">Agentic Intent Gate v0.1.0 · One trusted SIDE_EFFECT tool · Connecting…</footer>
+    </section>
   </main>
 </body>
 </html>
